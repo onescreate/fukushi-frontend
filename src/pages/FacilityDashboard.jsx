@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios' // ★追加：通信用のツール
+import axios from 'axios'
 
 function FacilityDashboard() {
   const navigate = useNavigate()
@@ -12,10 +12,41 @@ function FacilityDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [stampMessage, setStampMessage] = useState('')
 
+  // ★ 追加：DBから取得する今日の予定データ
+  const [todayData, setTodayData] = useState({ planIn: '-', planOut: '-', mealStatus: 'なし' })
+
+  // 時計の更新
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
+
+  // ★ 追加：今日の予定をバックエンドから取得する処理
+  useEffect(() => {
+    const fetchTodayPlan = async () => {
+      try {
+        const token = localStorage.getItem('userToken')
+        if (!token) return;
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        const userId = payload.id
+        
+        // 今日の日付を YYYY-MM-DD 形式で作成
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/user/today`, {
+          params: { user_id: userId, date: dateStr }
+        });
+
+        if (res.data.success) {
+          setTodayData(res.data.today);
+        }
+      } catch (error) {
+        console.error("予定取得エラー:", error);
+      }
+    };
+    fetchTodayPlan();
+  }, []);
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
@@ -27,27 +58,21 @@ function FacilityDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('userToken')
     localStorage.removeItem('userName')
-    // ★ここだけ修正：新しいタブレットのログイン画面に戻るようにしています
     navigate('/facility-login') 
   }
 
-  // ★大幅アップデート：ボタンを押した時にバックエンドへ通信する
   const handleStamp = async (type) => {
     const timeString = formatTime(currentTime)
-    
     try {
-      // プロのテクニック：通行証（トークン）を解読して、中に隠れている利用者のIDを取り出す
       const token = localStorage.getItem('userToken')
       const payload = JSON.parse(atob(token.split('.')[1]))
       const userId = payload.id
 
-      // バックエンドの打刻APIへデータを送信！
       await axios.post(`${import.meta.env.VITE_API_URL}/api/user/stamp`, {
         user_id: userId,
         stamp_type: type
       })
 
-      // 通信が大成功したら、画面の表示を切り替える
       if (type === 'in') {
         localStorage.setItem(statusKey, 'in')
         setStampMessage(`${timeString} - 通所を記録しました`)
@@ -56,24 +81,13 @@ function FacilityDashboard() {
         setStampMessage(`${timeString} - 退所を記録しました`)
       }
 
-      // 3秒後に自動ログアウト
-      setTimeout(() => {
-        handleLogout()
-      }, 3000)
-
+      setTimeout(() => handleLogout(), 3000)
     } catch (error) {
       console.error(error)
-      // 万が一通信に失敗した場合は赤文字でエラーを出す
       setStampMessage('エラー：通信に失敗しました。もう一度お試しください。')
       setTimeout(() => setStampMessage(''), 3000)
     }
   }
-
-  const todaySchedule = [
-    { time: '10:00 - 12:00', task: '午前作業（軽作業）' },
-    { time: '12:00 - 13:00', task: '昼食・休憩' },
-    { time: '13:00 - 15:00', task: '午後作業（梱包）' }
-  ]
 
   return (
     <div style={{ 
@@ -133,27 +147,11 @@ function FacilityDashboard() {
           letter-spacing: 2px;
         }
         
-        .btn-start {
-          background: #10B981;
-          color: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
-        }
-        .btn-start:hover {
-          background: #059669;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
+        .btn-start { background: #10B981; color: #FFFFFF; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-start:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
 
-        .btn-end {
-          background: #F87171;
-          color: #FFFFFF;
-          box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2);
-        }
-        .btn-end:hover {
-          background: #EF4444;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(248, 113, 113, 0.3);
-        }
+        .btn-end { background: #F87171; color: #FFFFFF; box-shadow: 0 4px 12px rgba(248, 113, 113, 0.2); }
+        .btn-end:hover { background: #EF4444; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(248, 113, 113, 0.3); }
 
         .schedule-container {
           margin-top: 40px;
@@ -167,40 +165,24 @@ function FacilityDashboard() {
           padding: 16px 0;
           border-bottom: 1px solid #F1F5F9;
         }
-        .schedule-item:last-child {
-          border-bottom: none;
-        }
+        .schedule-item:last-child { border-bottom: none; }
         
-        .schedule-time {
-          font-family: 'JetBrains Mono', monospace;
-          color: #64748B;
-          font-size: 14px;
-          font-weight: 500;
-        }
-        
-        .schedule-task {
-          color: #1E293B;
-          font-weight: 600;
-          font-size: 15px;
-        }
+        .schedule-time { font-family: 'JetBrains Mono', monospace; color: #64748B; font-size: 14px; font-weight: 500; }
+        .schedule-task { color: #1E293B; font-weight: 600; font-size: 15px; }
 
         .success-overlay {
-          background: #F8FAFC;
-          border: 1px solid #E2E8F0;
-          color: #0F172A;
-          padding: 32px 24px;
-          border-radius: 16px;
-          text-align: center;
-          font-weight: 600;
-          font-size: 20px;
-          margin-bottom: 24px;
+          background: #F8FAFC; border: 1px solid #E2E8F0; color: #0F172A;
+          padding: 32px 24px; border-radius: 16px; text-align: center;
+          font-weight: 600; font-size: 20px; margin-bottom: 24px;
           animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
+        .meal-badge {
+          display: inline-block; padding: 4px 10px; border-radius: 8px;
+          background: #FFF7ED; color: #EA580C; font-size: 13px; font-weight: 700; border: 1px solid #FED7AA;
         }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
 
       <div className="dashboard-card">
@@ -224,28 +206,28 @@ function FacilityDashboard() {
 
             <div style={{ display: 'flex', gap: '16px', flexDirection: 'column' }}>
               {currentStatus !== 'in' ? (
-                <button className="action-btn btn-start" onClick={() => handleStamp('in')}>
-                  通所
-                </button>
+                <button className="action-btn btn-start" onClick={() => handleStamp('in')}>通所</button>
               ) : (
-                <button className="action-btn btn-end" onClick={() => handleStamp('out')}>
-                  退所
-                </button>
+                <button className="action-btn btn-end" onClick={() => handleStamp('out')}>退所</button>
               )}
             </div>
           </>
         )}
 
         <div className="schedule-container">
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#94A3B8', letterSpacing: '1px', marginBottom: '12px' }}>
-            本日の予定
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#94A3B8', letterSpacing: '1px' }}>本日の予定</div>
+            {todayData.mealStatus === '予約' && <span className="meal-badge">🍱 お弁当あり</span>}
           </div>
-          {todaySchedule.map((item, index) => (
-            <div key={index} className="schedule-item">
-              <span className="schedule-time">{item.time}</span>
-              <span className="schedule-task">{item.task}</span>
-            </div>
-          ))}
+          
+          <div className="schedule-item">
+            <span className="schedule-time">通所予定</span>
+            <span className="schedule-task">{todayData.planIn}</span>
+          </div>
+          <div className="schedule-item">
+            <span className="schedule-time">退所予定</span>
+            <span className="schedule-task">{todayData.planOut}</span>
+          </div>
         </div>
 
         {!stampMessage && (
