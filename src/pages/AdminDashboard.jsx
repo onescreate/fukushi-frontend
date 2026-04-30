@@ -5,192 +5,100 @@ import axios from 'axios'
 function AdminDashboard() {
   const navigate = useNavigate()
   const adminName = localStorage.getItem('adminName') || '管理者'
-  
-  // 打刻記録を保存する状態
-  const [attendanceRecords, setAttendanceRecords] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [scheduleList, setScheduleList] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [filterPending, setFilterPending] = useState(false) // 承認待ちのみ表示フラグ
 
-  // 画面が開いた瞬間に、バックエンドから打刻記録を取得する
   useEffect(() => {
-    const fetchAttendance = async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/attendance`)
-        setAttendanceRecords(response.data.records)
-      } catch (err) {
-        setError('データの取得に失敗しました。')
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchAttendance()
+    const token = localStorage.getItem('adminToken')
+    if (!token) navigate('/admin-login')
+    fetchScheduleList()
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('adminName')
-    navigate('/admin-login') // ★修正：管理者のログイン画面に戻る！
+  const fetchScheduleList = async () => {
+    setIsLoading(true)
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/schedule-list`)
+      if (res.data.success) setScheduleList(res.data.list)
+    } catch (err) {
+      console.error(err)
+    } finally { setIsLoading(false) }
   }
 
-  // 時刻を美しくフォーマットする関数
-  const formatDateTime = (isoString) => {
-    const date = new Date(isoString)
-    return date.toLocaleString('ja-JP', {
-      month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-    })
+  const updateStatus = async (planId, newStatus) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/schedule/update-status`, { plan_id: planId, status: newStatus })
+      fetchScheduleList()
+    } catch (err) { alert("更新に失敗しました") }
   }
+
+  // フィルタリング処理
+  const displayList = filterPending ? scheduleList.filter(s => s.status === '承認待ち') : scheduleList;
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#F8FAFC', 
-      padding: '40px 20px',
-      fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <style>{`
-        * { box-sizing: border-box; }
+    <div className="min-h-screen bg-slate-100 p-4 font-sans">
+      <div className="max-w-6xl mx-auto bg-white p-6 rounded-3xl shadow-xl border border-slate-200">
         
-        .admin-container {
-          max-width: 900px;
-          margin: 0 auto;
-        }
-
-        .header-section {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 32px;
-        }
-
-        .data-card {
-          background: #FFFFFF;
-          border-radius: 16px;
-          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 15px rgba(0, 0, 0, 0.04);
-          overflow: hidden; /* 角丸からテーブルがはみ出さないようにする */
-        }
-
-        .data-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-        }
-
-        .data-table th {
-          background-color: #F1F5F9;
-          color: #475569;
-          font-weight: 600;
-          font-size: 14px;
-          padding: 16px 24px;
-          border-bottom: 1px solid #E2E8F0;
-          letter-spacing: 0.5px;
-        }
-
-        .data-table td {
-          padding: 16px 24px;
-          border-bottom: 1px solid #F1F5F9;
-          color: #1E293B;
-          font-size: 15px;
-        }
-
-        .data-table tr:last-child td {
-          border-bottom: none;
-        }
-
-        .data-table tr:hover {
-          background-color: #F8FAFC;
-        }
-
-        .badge {
-          display: inline-block;
-          padding: 6px 12px;
-          border-radius: 999px;
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-        .badge-in {
-          background-color: #ECFDF5;
-          color: #059669;
-          border: 1px solid #A7F3D0;
-        }
-        .badge-out {
-          background-color: #FEF2F2;
-          color: #DC2626;
-          border: 1px solid #FECACA;
-        }
-
-        .logout-btn {
-          padding: 10px 20px;
-          background: #FFFFFF;
-          border: 1px solid #E2E8F0;
-          border-radius: 8px;
-          color: #64748B;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .logout-btn:hover {
-          background: #F1F5F9;
-          color: #0F172A;
-        }
-      `}</style>
-
-      <div className="admin-container">
-        <div className="header-section">
-          <div>
-            <h2 style={{ margin: '0 0 4px 0', fontSize: '24px', color: '#0F172A', fontWeight: '700' }}>
-              管理者ダッシュボード
-            </h2>
-            <p style={{ margin: 0, color: '#64748B', fontSize: '15px' }}>
-              {adminName} さん、お疲れ様です。
-            </p>
+        <div className="flex justify-between items-center mb-8 border-b pb-4">
+          <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <svg className="w-7 h-7 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            予定申請一覧（承認管理）
+          </h2>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-2 text-sm font-bold text-orange-600 bg-orange-50 px-3 py-2 rounded-xl border border-orange-200 cursor-pointer">
+              <input type="checkbox" checked={filterPending} onChange={() => setFilterPending(!filterPending)} className="w-4 h-4" />
+              承認待ちのみ表示
+            </label>
+            <button onClick={() => { localStorage.clear(); navigate('/admin-login'); }} className="text-sm text-slate-400 hover:text-slate-600">ログアウト</button>
           </div>
-          <button className="logout-btn" onClick={handleLogout}>
-            ログアウト
-          </button>
         </div>
 
-        <div className="data-card">
-          <div style={{ padding: '24px', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontSize: '18px', color: '#0F172A', fontWeight: '600' }}>
-              本日の打刻ログ
-            </h3>
-          </div>
-
-          {loading ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>データを読み込み中...</div>
-          ) : error ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#EF4444' }}>{error}</div>
-          ) : attendanceRecords.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', color: '#94A3B8' }}>打刻記録がありません。</div>
-          ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>日時</th>
-                  <th>利用者名</th>
-                  <th>種別</th>
-                </tr>
-              </thead>
-              <tbody>
-                {attendanceRecords.map((record) => (
-                  <tr key={record.id}>
-                    <td style={{ fontFamily: '"JetBrains Mono", monospace' }}>
-                      {formatDateTime(record.stamp_time)}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-50 text-slate-500 text-xs font-bold uppercase border-b">
+              <tr>
+                <th className="p-4">日付</th>
+                <th className="p-4">氏名</th>
+                <th className="p-4">予定時間</th>
+                <th className="p-4">食事</th>
+                <th className="p-4">状態</th>
+                <th className="p-4 text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr><td colSpan="6" className="p-10 text-center text-slate-400 font-bold">読み込み中...</td></tr>
+              ) : displayList.length === 0 ? (
+                <tr><td colSpan="6" className="p-10 text-center text-slate-400 font-bold">該当する申請はありません</td></tr>
+              ) : (
+                displayList.map((s, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-4 font-bold text-slate-600">{s.date}</td>
+                    <td className="p-4 font-bold text-slate-800">{s.name}</td>
+                    <td className="p-4 text-slate-600 text-sm">{s.planIn} ~ {s.planOut}</td>
+                    <td className="p-4 text-sm">{s.meal === '予約' ? <span className="text-orange-500 font-bold">🍱 予約</span> : <span className="text-slate-300">-</span>}</td>
+                    <td className="p-4">
+                      {s.status === '承認待ち' ? <span className="px-2 py-1 bg-orange-100 text-orange-600 rounded text-[10px] font-bold border border-orange-200">承認待ち</span> : 
+                       s.status === '承認済' ? <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-[10px] font-bold border border-blue-200">承認済</span> :
+                       <span className="px-2 py-1 bg-slate-100 text-slate-500 rounded text-[10px] font-bold border border-slate-200">{s.status}</span>}
                     </td>
-                    <td style={{ fontWeight: '500' }}>
-                      {record.last_name} {record.first_name}
-                    </td>
-                    <td>
-                      <span className={`badge ${record.stamp_type === 'in' ? 'badge-in' : 'badge-out'}`}>
-                        {record.stamp_type === 'in' ? '通所' : '退所'}
-                      </span>
+                    <td className="p-4 text-center">
+                      <div className="flex gap-2 justify-center">
+                        {s.status === '承認待ち' ? (
+                          <>
+                            <button onClick={() => updateStatus(s.planId, '承認済')} className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg shadow hover:bg-blue-700 transition-all">承認</button>
+                            <button onClick={() => updateStatus(s.planId, '差戻し')} className="px-3 py-1 bg-white border border-rose-200 text-rose-500 text-xs font-bold rounded-lg hover:bg-rose-50 transition-all">差戻し</button>
+                          </>
+                        ) : (
+                          <button onClick={() => updateStatus(s.planId, '承認待ち')} className="text-xs text-slate-400 hover:text-indigo-600 underline">変更</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

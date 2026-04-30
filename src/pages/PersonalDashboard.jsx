@@ -26,17 +26,14 @@ function PersonalDashboard() {
   const [planOut, setPlanOut] = useState('15:00')
   const [note, setNote] = useState('')
 
-  // ==========================================
-  // ★ 追加：詳細設定画面用の状態管理
-  // ==========================================
   const [detailMode, setDetailMode] = useState(false)
-  const [detailTargetDate, setDetailTargetDate] = useState('') // 編集対象の日付 (YYYY/MM/DD)
-  const [detailType, setDetailType] = useState('normal') // normal, training, absence
+  const [detailTargetDate, setDetailTargetDate] = useState('') 
+  const [detailType, setDetailType] = useState('normal') 
   const [singlePlanIn, setSinglePlanIn] = useState('10:00')
   const [singlePlanOut, setSinglePlanOut] = useState('15:00')
   const [singleNote, setSingleNote] = useState('')
   const [singleDest, setSingleDest] = useState('')
-  const [subEvents, setSubEvents] = useState([]) // 中抜けの配列
+  const [subEvents, setSubEvents] = useState([]) 
 
   const [modal, setModal] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null })
 
@@ -125,9 +122,6 @@ function PersonalDashboard() {
     });
   };
 
-  // ==========================================
-  // ★ 追加：1日分の詳細設定（欠席・中抜け等）の送信
-  // ==========================================
   const submitSingleSchedule = () => {
     let pIn = singlePlanIn;
     let pOut = singlePlanOut;
@@ -159,14 +153,12 @@ function PersonalDashboard() {
     });
   };
 
-  // 中抜けイベントの操作
   const addSubEvent = () => setSubEvents([...subEvents, { id: Date.now(), start: '12:00', end: '13:00', category: '通院', detail: '精神科' }]);
   const removeSubEvent = (id) => setSubEvents(subEvents.filter(ev => ev.id !== id));
   const updateSubEvent = (id, field, value) => {
     setSubEvents(subEvents.map(ev => {
       if (ev.id === id) {
         let newEv = { ...ev, [field]: value };
-        // カテゴリが変わったら詳細の初期値をセット
         if (field === 'category') {
           if (value === '通院') newEv.detail = '精神科';
           else if (value === 'ハローワーク') newEv.detail = '失業認定日';
@@ -204,10 +196,12 @@ function PersonalDashboard() {
   const renderCalendarGrid = () => {
     const y = currentCalDate.getFullYear(); const m = currentCalDate.getMonth();
     const firstDay = new Date(y, m, 1).getDay(); const lastDate = new Date(y, m + 1, 0).getDate();
-    const todayObj = new Date(); const cY = todayObj.getFullYear(), cM = todayObj.getMonth(), cDate = todayObj.getDate();
-    const isAfter15th = (cDate > 15);
+    
+    // ★ 今日の日付を文字列で作成
+    const todayObj = new Date(); 
+    const cY = todayObj.getFullYear(), cM = todayObj.getMonth(), cDate = todayObj.getDate();
     const todayStr = `${cY}/${String(cM+1).padStart(2,'0')}/${String(cDate).padStart(2,'0')}`;
-    const monthsDiff = (y - cY) * 12 + (m - cM);
+    
     let days = [];
     for (let i = 0; i < firstDay; i++) days.push(<div key={`empty-${i}`}></div>);
 
@@ -216,12 +210,14 @@ function PersonalDashboard() {
       const h = targetDateStr.replace(/\//g, '-');
       const dt = currentMonthSchedule[targetDateStr];
       const selSched = selectedDates.includes(h); const selMeal = selectedMealDates.includes(h);
+      
       let isSelectable = true;
 
+      // ★ 修正：今日以前（今日を含む）は選択不可にする
       if (actionTab === 'schedule') {
-        if (!dt && (monthsDiff <= 0 || (monthsDiff === 1 && isAfter15th))) isSelectable = false;
+        if (!dt && targetDateStr <= todayStr) isSelectable = false;
       } else {
-        if (!dt || (!dt.meal && (monthsDiff <= 0 || (monthsDiff === 1 && isAfter15th))) || (dt.meal && targetDateStr < todayStr)) isSelectable = false;
+        if (!dt || targetDateStr <= todayStr) isSelectable = false;
       }
 
       let baseClass = "w-full aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all border text-sm overflow-hidden ";
@@ -249,14 +245,13 @@ function PersonalDashboard() {
         if (!isSelectable && !dt) return;
         if (actionTab === 'schedule') {
           if (dt) {
-            // ★詳細画面を開く際の初期値セット
             setDetailTargetDate(targetDateStr);
             setSinglePlanIn(dt.planIn || '10:00'); setSinglePlanOut(dt.planOut || '15:00');
             let noteText = dt.note || ''; let initialType = 'normal'; let destText = '';
             if (noteText.includes('【欠席】')) { initialType = 'absence'; noteText = noteText.replace('【欠席】', '').trim(); }
             else if (noteText.includes('【実習先:')) { initialType = 'training'; const match = noteText.match(/【実習先:(.*?)】/); if (match) destText = match[1].trim(); noteText = noteText.replace(/【実習先:.*?】/, '').trim(); }
             setSingleNote(noteText); setSingleDest(destText); setDetailType(initialType);
-            setSubEvents(dt.subEvents || []); // API拡張時はここにデータが入る
+            setSubEvents(dt.subEvents || []); 
             setDetailMode(true);
           } else { setSelectedDates(prev => prev.includes(h) ? prev.filter(x => x !== h) : [...prev, h]); }
         } else {
@@ -304,10 +299,9 @@ function PersonalDashboard() {
                 <div className="flex items-center gap-1.5"><span className="w-4 h-4 rounded border border-slate-300 bg-slate-200 shadow-sm inline-block"></span> <span className="text-slate-700 text-sm">欠席</span></div>
                 <div className="flex items-center gap-1.5"><span className="w-4 h-4 flex items-center justify-center text-slate-500"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span> <span className="text-slate-700 text-sm">食事注文</span></div>
               </div>
-              <p className="text-rose-500">⚠️ 翌月分の予定・食事申請は【毎月15日】が締め切りです。<br/>通所予定日に休む場合や、後日欠席を申請する場合はカレンダーから該当日を選択してください。</p>
+              <p className="text-rose-500">⚠️ 翌月分の予定・食事申請は【毎月15日】までに行うと自動承認されます。<br/>16日以降の新規申請や変更は施設側の「承認待ち」となります。</p>
             </div>
 
-            {/* ★ 通常カレンダー画面 */}
             {!detailMode ? (
               <>
                 <div className="flex justify-between items-center mb-4 mt-2">
@@ -357,9 +351,6 @@ function PersonalDashboard() {
                 </div>
               </>
             ) : (
-              // ==========================================
-              // ★ 追加：詳細設定画面（欠席・中抜け等）
-              // ==========================================
               <div className="animate-fade-in">
                 <div className="flex items-center gap-3 mb-6">
                   <button onClick={() => setDetailMode(false)} className="p-2 bg-slate-100 text-slate-500 rounded-lg hover:bg-slate-200 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg></button>
@@ -522,7 +513,7 @@ function PersonalDashboard() {
               <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors bg-slate-50 hover:bg-slate-100 rounded-full p-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div className="overflow-y-auto flex-1 pr-2 space-y-6 text-sm text-slate-600 custom-scrollbar">
-              <div><h4 className="font-bold text-indigo-600 mb-2 border-l-4 border-indigo-500 pl-2">📅 予定の申請・変更について</h4><ul className="list-disc pl-5 space-y-1.5 leading-relaxed"><li><strong>翌月分の申請は【毎月15日】が締め切り</strong>です。16日以降は翌月分の新規登録ができなくなります。</li><li>複数の日を選んで、まとめて同じ時間を申請することができます。</li><li>すでに申請済みの予定がある日をクリックすると、詳細画面が開き、時間の変更や<strong>欠席・実習</strong>の申請ができます。</li></ul></div>
+              <div><h4 className="font-bold text-indigo-600 mb-2 border-l-4 border-indigo-500 pl-2">📅 予定の申請・変更について</h4><ul className="list-disc pl-5 space-y-1.5 leading-relaxed"><li><strong>翌月分の申請は【毎月15日】が締め切り</strong>です。16日以降の申請は自動承認されず、「承認待ち」となります。</li><li>複数の日を選んで、まとめて同じ時間を申請することができます。</li><li>すでに申請済みの予定がある日をクリックすると、詳細画面が開き、時間の変更や<strong>欠席・実習</strong>の申請ができます。</li></ul></div>
               <div><h4 className="font-bold text-orange-600 mb-2 border-l-4 border-orange-500 pl-2">🍱 食事の注文・取り消しについて</h4><ul className="list-disc pl-5 space-y-1.5 leading-relaxed"><li>「食事の注文」タブに切り替えて、日付を選択してください。</li><li><strong>14日以内の取り消し（キャンセル）</strong>は、キャンセル料が発生する場合がありますのでご注意ください。</li><li className="text-rose-500 font-bold">予定登録をしている日付でないと選択できません。予定登録を先にしてください。</li></ul></div>
             </div>
             <div className="mt-6 pt-4 border-t border-slate-100 shrink-0"><button onClick={() => setShowHelpModal(false)} className="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition-all active:scale-95">閉じる</button></div>
