@@ -7,21 +7,39 @@ function FacilityDashboard() {
   const userName = localStorage.getItem('userName') || '利用者'
   
   const statusKey = `stampStatus_${userName}`
-  const [currentStatus, setCurrentStatus] = useState(localStorage.getItem(statusKey) || 'out')
+  
+  // ★追加・修正：保存されている状態が「今日のものか」を判定し、過去ならリセットする
+  const getDailyStatus = () => {
+    const stored = localStorage.getItem(statusKey);
+    if (!stored) return 'out'; // 何もなければ「通所(out状態)」
+    
+    try {
+      const data = JSON.parse(stored);
+      const todayStr = new Date().toLocaleDateString('ja-JP');
+      // 保存されている日付が今日と同じならその状態を返し、違うならリセット
+      if (data.date === todayStr) {
+        return data.status;
+      } else {
+        return 'out';
+      }
+    } catch (e) {
+      // 古い形式（単なる 'in' や 'out' の文字列）が残っていた場合の安全策
+      return 'out';
+    }
+  }
+
+  const [currentStatus, setCurrentStatus] = useState(getDailyStatus())
   
   const [currentTime, setCurrentTime] = useState(new Date())
   const [stampMessage, setStampMessage] = useState('')
 
-  // ★ 追加：DBから取得する今日の予定データ
   const [todayData, setTodayData] = useState({ planIn: '-', planOut: '-', mealStatus: 'なし' })
 
-  // 時計の更新
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  // ★ 追加：今日の予定をバックエンドから取得する処理
   useEffect(() => {
     const fetchTodayPlan = async () => {
       try {
@@ -30,7 +48,6 @@ function FacilityDashboard() {
         const payload = JSON.parse(atob(token.split('.')[1]))
         const userId = payload.id
         
-        // 今日の日付を YYYY-MM-DD 形式で作成
         const now = new Date();
         const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -73,11 +90,14 @@ function FacilityDashboard() {
         stamp_type: type
       })
 
+      // ★追加・修正：打刻した「日付」と一緒にステータスを保存する
+      const todayStr = new Date().toLocaleDateString('ja-JP');
+      localStorage.setItem(statusKey, JSON.stringify({ status: type, date: todayStr }));
+      setCurrentStatus(type); // ボタンを即座に切り替える
+
       if (type === 'in') {
-        localStorage.setItem(statusKey, 'in')
         setStampMessage(`${timeString} - 通所を記録しました`)
       } else {
-        localStorage.setItem(statusKey, 'out')
         setStampMessage(`${timeString} - 退所を記録しました`)
       }
 
