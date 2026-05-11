@@ -608,17 +608,12 @@ function DailyRosterTab({ selectedStoreId, targetDate }) {
                 <thead>
 
                   <tr>
-
                     <th className="w-32">申請日時</th>
-
                     <th className="w-48">対象者 (対象日)</th>
-
-                    <th className="min-w-[200px]">変更内容 (時間 / 食事)</th>
-
+                    <th className="min-w-[150px]">通所予定 (時間)</th>
+                    <th className="w-24">食事注文</th>
                     <th className="min-w-[200px]">変更理由</th>
-
                     <th className="w-24 text-center">操作</th>
-
                   </tr>
 
                 </thead>
@@ -646,23 +641,16 @@ function DailyRosterTab({ selectedStoreId, targetDate }) {
                         </td>
 
                         <td>
-
-                          <div className="flex items-center gap-2 mb-1">
-
+                          <div className="flex items-center gap-2">
                             <span className="text-xs text-slate-400 line-through">{p.originalIn || '--:--'} ~ {p.originalOut || '--:--'}</span>
-
                             <span className="text-slate-300 text-xs font-bold">➔</span>
-
                             <span className="text-sm font-bold text-indigo-700">{p.planIn} ~ {p.planOut}</span>
-
                           </div>
-
-                          <div className="text-xs text-slate-600">食事: {p.meal === '予約' ? <span className="text-orange-500 font-bold">あり</span> : 'なし'}</div>
-
                         </td>
-
+                        <td>
+                          <div className="text-sm font-bold">{p.meal === '予約' ? <span className="text-orange-500">あり</span> : <span className="text-slate-400">なし</span>}</div>
+                        </td>
                         <td className="text-xs text-slate-600 font-medium break-all whitespace-normal">{p.note || '-'}</td>
-
                         <td className="text-center">
 
                           <button onClick={() => updateStatus(p.planId, '承認済')} className="px-4 py-1.5 bg-indigo-600 text-white font-bold rounded shadow-sm hover:bg-indigo-700 transition-all text-xs w-full">
