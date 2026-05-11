@@ -344,7 +344,7 @@ function PersonalDashboard() {
 
                   {actionTab === 'meal' && (
                     <div className="flex flex-col sm:flex-row gap-3">
-                      <button onClick={() => submitMealRegistration(true)} disabled={selectedMealDates.length === 0} className="flex-1 py-3.5 bg-orange-500 text-white font-bold rounded-xl shadow-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex justify-center items-center gap-2"><span className="text-xl">🍱</span> 注文する</button>
+                      <button onClick={() => submitMealRegistration(true)} disabled={selectedMealDates.length === 0} className="flex-1 py-3.5 bg-orange-500 text-white font-bold rounded-xl shadow-md hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex justify-center items-center gap-2"><span className="text-xl">〇</span> 注文する</button>
                       <button onClick={() => submitMealRegistration(false)} disabled={selectedMealDates.length === 0} className="flex-1 py-3.5 bg-white text-rose-500 font-bold rounded-xl border border-rose-200 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex justify-center items-center gap-2"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg> 取り消す</button>
                     </div>
                   )}
