@@ -16,10 +16,10 @@ function DailyRosterTab({ selectedStoreId, targetDate }) {
 
   // モーダル用のState
 
+  // モーダル用のState
   const [absentModal, setAbsentModal] = useState({ isOpen: false, user: null, reason: '' });
-
   const [mealModal, setMealModal] = useState({ isOpen: false, user: null, status: '喫食', subUserId: '' });
-
+  const [approveModal, setApproveModal] = useState({ isOpen: false, planId: null, name: '' });
   const [editModal, setEditModal] = useState({
 
     isOpen: false, user: null,
@@ -652,13 +652,9 @@ function DailyRosterTab({ selectedStoreId, targetDate }) {
                         </td>
                         <td className="text-xs text-slate-600 font-medium break-all whitespace-normal">{p.note || '-'}</td>
                         <td className="text-center">
-
-                          <button onClick={() => updateStatus(p.planId, '承認済')} className="px-4 py-1.5 bg-indigo-600 text-white font-bold rounded shadow-sm hover:bg-indigo-700 transition-all text-xs w-full">
-
+                          <button onClick={() => setApproveModal({ isOpen: true, planId: p.planId, name: p.name })} className="px-4 py-1.5 bg-indigo-600 text-white font-bold rounded shadow-sm hover:bg-indigo-700 transition-all text-xs w-full">
                             承認
-
                           </button>
-
                         </td>
 
                       </tr>
@@ -1214,19 +1210,32 @@ function DailyRosterTab({ selectedStoreId, targetDate }) {
             </div>
 
           </div>
-
         </div>
-
       )}
 
-
+      {/* ④ 承認確認モーダル */}
+      {approveModal.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-4 pb-3 border-b border-slate-100">承認の確認</h3>
+            <div className="space-y-4 mb-6">
+              <p className="text-sm text-slate-600">
+                <span className="font-bold text-indigo-600">{approveModal.name}</span> さんの申請を承認しますか？
+              </p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setApproveModal({ isOpen: false, planId: null, name: '' })} className="px-4 py-2 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 text-sm hover:bg-slate-50">キャンセル</button>
+              <button onClick={() => {
+                updateStatus(approveModal.planId, '承認済');
+                setApproveModal({ isOpen: false, planId: null, name: '' });
+              }} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700">承認する</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
-
   );
-
 }
-
-
 
 export default DailyRosterTab;
