@@ -5,6 +5,7 @@ import LoginPage from './features/auth/LoginPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import HelpPage from './pages/HelpPage';
+import SchedulesPage from './pages/SchedulesPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -58,6 +59,14 @@ export default function App() {
           element={
             <RequirePerm perm="store.manage">
               <DevicesPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/schedules"
+          element={
+            <RequirePerm perm="schedule.view">
+              <SchedulesPage />
             </RequirePerm>
           }
         />

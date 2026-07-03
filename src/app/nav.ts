@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Building2,
+  CalendarDays,
   LayoutDashboard,
   Store,
   Tablet,
@@ -33,6 +34,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/users',
     icon: UserRound,
     permission: 'user.view',
+  },
+  {
+    label: '通所予定',
+    to: '/schedules',
+    icon: CalendarDays,
+    permission: 'schedule.view',
   },
   { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
   { label: 'ヘルプ・使い方', to: '/help', icon: BookOpen },
