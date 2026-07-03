@@ -6,6 +6,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   Settings,
+  Percent,
   Store,
   Tablet,
   UserRound,
@@ -68,7 +69,13 @@ export const NAV_ITEMS: NavItem[] = [
     label: '食事料金',
     to: '/meal-pricing',
     icon: UtensilsCrossed,
-    permission: 'meal.view',
+    permission: 'settings.price',
+  },
+  {
+    label: '消費税設定',
+    to: '/tax-settings',
+    icon: Percent,
+    permission: 'settings.tax',
   },
   { label: 'ヘルプ・使い方', to: '/help', icon: BookOpen },
 ];
