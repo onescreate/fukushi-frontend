@@ -48,6 +48,7 @@ export function UserFormDialog({
   const [password, setPassword] = useState('');
   const [facilityId, setFacilityId] = useState('');
   const [certNumber, setCertNumber] = useState('');
+  const [useSpecialMealFee, setUseSpecialMealFee] = useState(false);
   const [specialMealFee, setSpecialMealFee] = useState('');
   const [heightCm, setHeightCm] = useState('');
   const [status, setStatus] = useState<'active' | 'withdrawn'>('active');
@@ -63,6 +64,7 @@ export function UserFormDialog({
       setPassword('');
       setFacilityId(target?.facilityId ?? '');
       setCertNumber(target?.certNumber ?? '');
+      setUseSpecialMealFee(target?.useSpecialMealFee ?? false);
       setSpecialMealFee(
         target?.specialMealFee != null ? String(target.specialMealFee) : '',
       );
@@ -83,7 +85,8 @@ export function UserFormDialog({
       kana: kana || undefined,
       facilityId,
       certNumber: certNumber || undefined,
-      specialMealFee: specialMealFee ? Number(specialMealFee) : undefined,
+      useSpecialMealFee,
+      specialMealFee: useSpecialMealFee ? Number(specialMealFee) || 0 : 0,
       heightCm: heightCm ? Number(heightCm) : undefined,
       status,
     };
@@ -241,18 +244,48 @@ export function UserFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="u-fee">特別食費（任意・円）</Label>
-            <Input
-              id="u-fee"
-              type="number"
-              value={specialMealFee}
-              onChange={(e) => setSpecialMealFee(e.target.value)}
-              placeholder="0"
-              className="max-w-40"
-            />
-            <p className="text-xs text-muted-foreground">
-              個別の食事料金がある場合のみ設定（通常は空欄）。
-            </p>
+            <Label>食事料金</Label>
+            <div className="inline-flex rounded-md border bg-muted/50 p-0.5">
+              {(
+                [
+                  [false, '通常料金'],
+                  [true, '特別料金'],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setUseSpecialMealFee(v)}
+                  className={`rounded-[5px] px-4 py-1.5 text-sm font-medium transition-colors ${
+                    useSpecialMealFee === v
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {useSpecialMealFee ? (
+              <div className="pt-1">
+                <Input
+                  id="u-fee"
+                  type="number"
+                  min={0}
+                  value={specialMealFee}
+                  onChange={(e) => setSpecialMealFee(e.target.value)}
+                  placeholder="0"
+                  className="max-w-40"
+                />
+                <p className="pt-1 text-xs text-muted-foreground">
+                  この利用者に適用する食事料金（税込・円）。補助がなく個別料金の場合に設定します。
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                店舗の食事料金を適用します。個別料金の利用者のみ「特別料金」を選択してください。
+              </p>
+            )}
           </div>
 
           {isEdit && (

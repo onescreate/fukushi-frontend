@@ -194,8 +194,10 @@ export default function UsersPage() {
                 { label: '受給者証番号', value: viewing.certNumber },
                 { label: '身長', value: viewing.heightCm ? `${viewing.heightCm} cm` : '' },
                 {
-                  label: '特別食費',
-                  value: viewing.specialMealFee ? `${viewing.specialMealFee} 円` : '',
+                  label: '食事料金',
+                  value: viewing.useSpecialMealFee
+                    ? `特別料金 ${viewing.specialMealFee.toLocaleString('ja-JP')} 円`
+                    : '通常料金（店舗の料金）',
                 },
                 { label: '登録日', value: formatDate(viewing.createdAt) },
               ]
