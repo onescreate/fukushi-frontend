@@ -38,6 +38,7 @@ export interface RosterRow {
   absenceReason: string | null;
   lateReason: string | null;
   earlyLeaveReason: string | null;
+  meal: { status: 'reserved' | 'eaten' } | null;
 }
 
 export function useRoster(facilityId: string, date: string) {

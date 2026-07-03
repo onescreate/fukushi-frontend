@@ -6,6 +6,7 @@ import {
   kioskAuthenticate,
   kioskBoard,
   kioskClock,
+  kioskMeal,
   kioskSubmitReason,
   kioskToken,
   type ClockResult,
@@ -174,6 +175,20 @@ export default function KioskPage() {
       setTimeout(backToSelect, 3500);
     } catch (err) {
       toast.error(getApiErrorMessage(err, '打刻に失敗しました'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doMeal = async (eaten: boolean) => {
+    setBusy(true);
+    try {
+      await kioskMeal(operationToken, eaten);
+      const b = await kioskBoard(operationToken);
+      setBoard(b);
+      toast.success(eaten ? '食事の喫食を記録しました' : '喫食を取り消しました');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, '食事の記録に失敗しました'));
     } finally {
       setBusy(false);
     }
@@ -419,11 +434,29 @@ export default function KioskPage() {
               </span>
             </div>
           ))}
-          <div className="flex justify-between py-3 text-sm">
+          <div className="flex items-center justify-between py-3 text-sm">
             <span className="text-slate-500">食事</span>
-            <span className="text-xs text-slate-400">
-              （食事管理は今後のフェーズで対応）
-            </span>
+            {board?.today.meal ? (
+              board.today.meal.status === 'eaten' ? (
+                <button
+                  onClick={() => doMeal(false)}
+                  disabled={busy}
+                  className="rounded-lg bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700 transition hover:bg-orange-200 disabled:opacity-50"
+                >
+                  喫食済（取消）
+                </button>
+              ) : (
+                <button
+                  onClick={() => doMeal(true)}
+                  disabled={busy}
+                  className="rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow transition hover:bg-emerald-600 disabled:opacity-50"
+                >
+                  食事をいただきました
+                </button>
+              )
+            ) : (
+              <span className="text-xs text-slate-400">予約なし</span>
+            )}
           </div>
         </div>
 

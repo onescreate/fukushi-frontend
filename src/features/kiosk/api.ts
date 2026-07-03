@@ -67,6 +67,13 @@ export async function kioskBoard(operationToken: string): Promise<KioskBoard> {
   return (await apiClient.post('/kiosk/board', { operationToken })).data;
 }
 
+export async function kioskMeal(
+  operationToken: string,
+  eaten: boolean,
+): Promise<{ status: 'reserved' | 'eaten' }> {
+  return (await apiClient.post('/kiosk/meal', { operationToken, eaten })).data;
+}
+
 export async function kioskSubmitReason(
   operationToken: string,
   date: string,
