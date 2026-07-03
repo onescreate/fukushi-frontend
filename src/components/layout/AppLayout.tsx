@@ -4,6 +4,7 @@ import { LogOut, PanelLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
 import { usePendingCount } from '../../features/schedules/approvalApi';
+import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { NAV_ITEMS } from '../../app/nav';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -22,6 +23,10 @@ export default function AppLayout() {
   const canApprove = hasPermission(me, 'schedule.approve');
   const { data: pending } = usePendingCount(canApprove);
   const pendingCount = pending?.count ?? 0;
+
+  const canApproveMeal = hasPermission(me, 'meal.manage');
+  const { data: mealPending } = usePendingMealCount(canApproveMeal);
+  const mealPendingCount = mealPending?.count ?? 0;
 
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === '1',
@@ -104,6 +109,15 @@ export default function AppLayout() {
                     }`}
                   >
                     {pendingCount}
+                  </span>
+                )}
+                {item.to === '/meal-approvals' && mealPendingCount > 0 && (
+                  <span
+                    className={`flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ${
+                      collapsed ? 'absolute right-1 top-1 h-4' : 'h-5'
+                    }`}
+                  >
+                    {mealPendingCount}
                   </span>
                 )}
               </NavLink>

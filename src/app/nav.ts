@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
+  ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
   Settings,
@@ -11,6 +12,7 @@ import {
   Tablet,
   UserRound,
   Users,
+  Utensils,
   UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react';
@@ -51,6 +53,18 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/approvals',
     icon: CalendarCheck,
     permission: 'schedule.approve',
+  },
+  {
+    label: '食事予約',
+    to: '/meal-reservations',
+    icon: Utensils,
+    permission: 'meal.view',
+  },
+  {
+    label: '食事承認',
+    to: '/meal-approvals',
+    icon: ClipboardCheck,
+    permission: 'meal.manage',
   },
   {
     label: '当日ロースター',

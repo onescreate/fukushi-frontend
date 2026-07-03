@@ -57,6 +57,7 @@ export function FacilityFormDialog({
   const [name, setName] = useState('');
   const [serviceType, setServiceType] = useState<ServiceType>('continuous_b');
   const [mealsEnabled, setMealsEnabled] = useState(false);
+  const [mealDeadlineDays, setMealDeadlineDays] = useState('14');
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [address, setAddress] = useState<AddressContactValue>(emptyAddressContact);
@@ -68,6 +69,7 @@ export function FacilityFormDialog({
       setName(target?.name ?? '');
       setServiceType(target?.serviceType ?? 'continuous_b');
       setMealsEnabled(target?.mealsEnabled ?? false);
+      setMealDeadlineDays(String(target?.mealChangeDeadlineDays ?? 14));
       setEmail(target?.email ?? '');
       setStatus(target?.status ?? 'active');
       setAddress(addressContactFromEntity(target));
@@ -92,6 +94,9 @@ export function FacilityFormDialog({
         name,
         serviceType,
         mealsEnabled,
+        mealChangeDeadlineDays: mealsEnabled
+          ? Number(mealDeadlineDays) || 14
+          : undefined,
         email: email || undefined,
         status,
         ...addressContactToInput(address),
@@ -207,6 +212,28 @@ export function FacilityFormDialog({
               「なし」の店舗では、職員・利用者ともに食事関連の機能が表示されません。
             </p>
           </div>
+
+          {mealsEnabled && (
+            <div className="space-y-1.5">
+              <Label htmlFor="fac-meal-deadline">食事の締切日数</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">利用日まで</span>
+                <Input
+                  id="fac-meal-deadline"
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={mealDeadlineDays}
+                  onChange={(e) => setMealDeadlineDays(e.target.value)}
+                  className="max-w-20"
+                />
+                <span className="text-sm text-muted-foreground">日以内は申請・キャンセル料の対象</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                この日数を過ぎると利用者本人の予約・変更・取消は「申請（要承認）」になり、取消にキャンセル料がかかります。最終締切は前日15時です。
+              </p>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor="fac-email">連絡先メール（任意）</Label>

@@ -1,0 +1,196 @@
+import { useMemo, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useMySchedules } from '../../features/schedules/myApi';
+import { useMyMeals, useMySubmitMeal, type Meal } from '../../features/meals/reservationApi';
+import { getApiErrorMessage } from '../../lib/errors';
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+
+/** 日付セルに表示する食事の状態ラベル。 */
+function mealBadge(meal: Meal | undefined) {
+  if (!meal) return null;
+  if (meal.approvalStatus === 'pending') {
+    return { text: meal.requestType === 'cancel' ? '取消申請中' : '予約申請中', cls: 'bg-amber-100 text-amber-700' };
+  }
+  if (meal.status === 'reserved') return { text: '予約済', cls: 'bg-orange-100 text-orange-700' };
+  if (meal.status === 'eaten') return { text: '喫食済', cls: 'bg-orange-100 text-orange-700' };
+  if (meal.status === 'cancelled') return { text: 'キャンセル', cls: 'bg-slate-100 text-slate-500' };
+  if (meal.status === 'revoked') return { text: '取消', cls: 'bg-slate-100 text-slate-500' };
+  if (meal.approvalStatus === 'rejected') return { text: '却下', cls: 'bg-slate-100 text-slate-500' };
+  return null;
+}
+
+export default function PersonalMealPage() {
+  const now = new Date();
+  const [year, setYear] = useState(now.getFullYear());
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstWeekday = new Date(year, month - 1, 1).getDay();
+  const from = `${year}-${pad(month)}-01`;
+  const to = `${year}-${pad(month)}-${pad(daysInMonth)}`;
+
+  const { data: schedules } = useMySchedules(from, to);
+  const { data: meals } = useMyMeals(from, to);
+  const submit = useMySubmitMeal();
+
+  // 承認済みの通所予定がある日のみ予約できる
+  const scheduledDays = useMemo(() => {
+    const s = new Set<string>();
+    (schedules ?? []).forEach((sc) => {
+      if (sc.status === 'approved') s.add(sc.planDate.slice(0, 10));
+    });
+    return s;
+  }, [schedules]);
+
+  const mealByDate = useMemo(() => {
+    const map = new Map<string, Meal>();
+    (meals ?? []).forEach((m) => map.set(m.mealDate, m));
+    return map;
+  }, [meals]);
+
+  const changeMonth = (delta: number) => {
+    let m = month + delta;
+    let y = year;
+    if (m < 1) { m = 12; y -= 1; }
+    else if (m > 12) { m = 1; y += 1; }
+    setMonth(m);
+    setYear(y);
+    setSelected(new Set());
+  };
+
+  const toggle = (ds: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(ds)) next.delete(ds);
+      else next.add(ds);
+      return next;
+    });
+  };
+
+  const handleSubmit = async (action: 'reserve' | 'cancel') => {
+    const dates = [...selected];
+    if (dates.length === 0) return;
+    try {
+      const r = await submit.mutateAsync({ dates, action });
+      const parts: string[] = [];
+      if (r.reserved) parts.push(`予約 ${r.reserved}件`);
+      if (r.pendingReserve) parts.push(`予約申請 ${r.pendingReserve}件`);
+      if (r.revoked) parts.push(`取消 ${r.revoked}件`);
+      if (r.pendingCancel) parts.push(`取消申請 ${r.pendingCancel}件`);
+      toast.success(parts.length ? parts.join('、') + ' を受け付けました' : '処理しました');
+      if (r.skipped.length) {
+        toast.warning(
+          r.skipped.map((s) => `${s.date}: ${s.reason}`).join(' / '),
+        );
+      }
+      setSelected(new Set());
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
+
+  const cells: (number | null)[] = [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  return (
+    <div>
+      <div className="mb-4">
+        <h1 className="text-lg font-bold text-slate-800">食事の注文</h1>
+        <p className="text-sm text-slate-500">
+          通所予定がある日に食事を予約できます。日付を選んで「予約」または「取消」してください。
+        </p>
+      </div>
+
+      <div className="mb-3 flex items-center justify-center gap-2">
+        <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
+          <ChevronLeft className="size-4" />
+        </Button>
+        <span className="w-28 text-center text-sm font-semibold">
+          {year}年 {month}月
+        </span>
+        <Button variant="outline" size="icon-sm" onClick={() => changeMonth(1)}>
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+
+      <Card className="p-3">
+        <div className="mb-1 grid grid-cols-7">
+          {WEEK.map((w, i) => (
+            <div
+              key={w}
+              className={`pb-2 text-center text-xs font-semibold ${
+                i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
+              }`}
+            >
+              {w}
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {cells.map((day, idx) => {
+            if (day === null) return <div key={`e${idx}`} />;
+            const ds = `${year}-${pad(month)}-${pad(day)}`;
+            const selectable = scheduledDays.has(ds);
+            const meal = mealByDate.get(ds);
+            const badge = mealBadge(meal);
+            const isSel = selected.has(ds);
+            return (
+              <button
+                key={ds}
+                disabled={!selectable}
+                onClick={() => toggle(ds)}
+                className={`flex min-h-16 flex-col rounded-md border p-1.5 text-left transition-colors ${
+                  !selectable
+                    ? 'cursor-not-allowed border-transparent bg-slate-50 text-slate-300'
+                    : isSel
+                      ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-400'
+                      : 'hover:border-primary/40 hover:bg-accent/40'
+                }`}
+              >
+                <span className="text-xs font-medium">{day}</span>
+                {badge && (
+                  <span className={`mt-1 rounded px-1 py-0.5 text-[10px] font-medium ${badge.cls}`}>
+                    {badge.text}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div className="mt-4 flex items-center gap-2">
+        <span className="text-sm text-slate-600">選択 {selected.size}日</span>
+        <div className="ml-auto flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => handleSubmit('cancel')}
+            disabled={selected.size === 0 || submit.isPending}
+          >
+            取消
+          </Button>
+          <Button
+            onClick={() => handleSubmit('reserve')}
+            disabled={selected.size === 0 || submit.isPending}
+          >
+            予約
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-3 space-y-1 text-xs text-slate-400">
+        <p>・通所予定がない日（グレー）は選択できません。先に予定を申請してください。</p>
+        <p>・利用日まで日数が近い予約・取消は「申請」となり、施設の承認が必要です。</p>
+        <p>・締切（前日15時）を過ぎた日は変更できません。直前の取消はキャンセル料が発生する場合があります。</p>
+      </div>
+    </div>
+  );
+}

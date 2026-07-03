@@ -20,6 +20,7 @@ export interface Facility {
   name: string;
   serviceType: ServiceType | null;
   mealsEnabled: boolean;
+  mealChangeDeadlineDays: number;
   email: string | null;
   status: 'active' | 'inactive';
   remarks: string | null;
@@ -39,6 +40,7 @@ export interface CreateFacilityInput {
   name: string;
   serviceType?: ServiceType;
   mealsEnabled?: boolean;
+  mealChangeDeadlineDays?: number;
   email?: string;
   remarks?: string;
   status?: 'active' | 'inactive';

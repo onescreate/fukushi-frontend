@@ -3,14 +3,15 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useMe } from '../../features/auth/useMe';
 import { Button } from '@/components/ui/button';
 
-const TABS = [
-  { to: '/my', label: '予定', end: true },
-  { to: '/my/history', label: '履歴', end: false },
-];
-
 export default function PersonalLayout() {
   const { logout } = useAuth();
   const { data: me } = useMe();
+
+  const tabs = [
+    { to: '/my', label: '予定', end: true },
+    ...(me?.mealsEnabled ? [{ to: '/my/meals', label: '食事', end: false }] : []),
+    { to: '/my/history', label: '履歴', end: false },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -29,7 +30,7 @@ export default function PersonalLayout() {
           </Button>
         </div>
         <div className="mx-auto flex max-w-3xl gap-1 px-5">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <NavLink
               key={t.to}
               to={t.to}

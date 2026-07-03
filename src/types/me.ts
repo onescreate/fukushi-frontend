@@ -35,6 +35,7 @@ export interface Me {
   loginId?: string;
   corporationId: string;
   facilityId?: string;
+  mealsEnabled?: boolean;
   roles?: FacilityRole[];
   permissions: Permission[];
 }

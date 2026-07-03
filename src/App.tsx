@@ -5,6 +5,7 @@ import LoginPage from './features/auth/LoginPage';
 import PersonalLoginPage from './features/auth/PersonalLoginPage';
 import PersonalProtected from './components/auth/PersonalProtected';
 import PersonalSchedulePage from './pages/personal/PersonalSchedulePage';
+import PersonalMealPage from './pages/personal/PersonalMealPage';
 import PersonalHistoryPage from './pages/personal/PersonalHistoryPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
@@ -15,6 +16,8 @@ import RosterPage from './pages/RosterPage';
 import AttendanceSettingsPage from './pages/AttendanceSettingsPage';
 import MealPricingPage from './pages/MealPricingPage';
 import TaxSettingsPage from './pages/TaxSettingsPage';
+import MealReservationsPage from './pages/MealReservationsPage';
+import MealApprovalsPage from './pages/MealApprovalsPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -32,6 +35,7 @@ export default function App() {
       <Route path="/my/login" element={<PersonalLoginPage />} />
       <Route path="/my" element={<PersonalProtected />}>
         <Route index element={<PersonalSchedulePage />} />
+        <Route path="meals" element={<PersonalMealPage />} />
         <Route path="history" element={<PersonalHistoryPage />} />
       </Route>
 
@@ -123,6 +127,22 @@ export default function App() {
           element={
             <RequirePerm perm="settings.tax">
               <TaxSettingsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/meal-reservations"
+          element={
+            <RequirePerm perm="meal.view">
+              <MealReservationsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/meal-approvals"
+          element={
+            <RequirePerm perm="meal.manage">
+              <MealApprovalsPage />
             </RequirePerm>
           }
         />

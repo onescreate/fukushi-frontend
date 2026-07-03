@@ -173,6 +173,9 @@ export default function FacilitiesPage() {
                 },
                 { label: 'ステータス', value: viewing.status === 'active' ? '有効' : '無効' },
                 { label: '食事提供', value: viewing.mealsEnabled ? 'あり' : 'なし' },
+                ...(viewing.mealsEnabled
+                  ? [{ label: '食事の締切', value: `利用日まで${viewing.mealChangeDeadlineDays}日以内は申請` }]
+                  : []),
                 { label: '連絡先メール', value: viewing.email },
                 { label: '設立年月日', value: formatDate(viewing.establishedOn) },
                 { label: '住所', value: formatAddress(viewing) },
