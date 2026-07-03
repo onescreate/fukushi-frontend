@@ -13,6 +13,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getApiErrorMessage } from '../../lib/errors';
 import {
+  AddressContactFields,
+  addressContactFromEntity,
+  addressContactToInput,
+  emptyAddressContact,
+  type AddressContactValue,
+} from '../../components/form/AddressContactFields';
+import {
   useCreateCorporation,
   useUpdateCorporation,
   type Corporation,
@@ -33,15 +40,20 @@ export function CorporationFormDialog({
 
   const [name, setName] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
+  const [address, setAddress] = useState<AddressContactValue>(emptyAddressContact);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
       setName(target?.name ?? '');
       setStatus(target?.status ?? 'active');
+      setAddress(addressContactFromEntity(target));
       setError('');
     }
   }, [open, target]);
+
+  const patchAddress = (patch: Partial<AddressContactValue>) =>
+    setAddress((prev) => ({ ...prev, ...patch }));
 
   const submitting = create.isPending || update.isPending;
 
@@ -49,11 +61,12 @@ export function CorporationFormDialog({
     e.preventDefault();
     setError('');
     try {
+      const payload = { name, status, ...addressContactToInput(address) };
       if (isEdit && target) {
-        await update.mutateAsync({ id: target.id, data: { name, status } });
+        await update.mutateAsync({ id: target.id, data: payload });
         toast.success('法人を更新しました');
       } else {
-        await create.mutateAsync({ name, status });
+        await create.mutateAsync(payload);
         toast.success('法人を登録しました');
       }
       onOpenChange(false);
@@ -64,7 +77,7 @@ export function CorporationFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? '法人を編集' : '法人を登録'}</DialogTitle>
           <DialogDescription>法人の基本情報を入力してください。</DialogDescription>
@@ -107,6 +120,8 @@ export function CorporationFormDialog({
               ))}
             </div>
           </div>
+
+          <AddressContactFields value={address} onChange={patchAddress} />
 
           <DialogFooter>
             <Button

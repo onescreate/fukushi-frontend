@@ -5,6 +5,12 @@ export interface Corporation {
   id: string;
   name: string;
   status: 'active' | 'inactive';
+  establishedOn: string | null;
+  postalCode: string | null;
+  prefecture: string | null;
+  city: string | null;
+  addressLine: string | null;
+  phone: string | null;
   createdAt: string;
   updatedAt: string;
   _count?: { facilities: number; users: number; staff: number };
@@ -13,14 +19,21 @@ export interface Corporation {
 export interface CorporationInput {
   name: string;
   status?: 'active' | 'inactive';
+  establishedOn?: string;
+  postalCode?: string;
+  prefecture?: string;
+  city?: string;
+  addressLine?: string;
+  phone?: string;
 }
 
 const KEY = ['corporations'];
 
-export function useCorporations() {
+export function useCorporations(enabled = true) {
   return useQuery<Corporation[]>({
     queryKey: KEY,
     queryFn: async () => (await apiClient.get<Corporation[]>('/corporations')).data,
+    enabled,
   });
 }
 
