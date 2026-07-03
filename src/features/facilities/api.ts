@@ -19,6 +19,7 @@ export interface Facility {
   corporationId: string;
   name: string;
   serviceType: ServiceType | null;
+  mealsEnabled: boolean;
   email: string | null;
   status: 'active' | 'inactive';
   remarks: string | null;
@@ -37,6 +38,7 @@ export interface CreateFacilityInput {
   corporationId: string;
   name: string;
   serviceType?: ServiceType;
+  mealsEnabled?: boolean;
   email?: string;
   remarks?: string;
   status?: 'active' | 'inactive';

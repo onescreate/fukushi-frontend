@@ -172,6 +172,7 @@ export default function FacilitiesPage() {
                     : '',
                 },
                 { label: 'ステータス', value: viewing.status === 'active' ? '有効' : '無効' },
+                { label: '食事提供', value: viewing.mealsEnabled ? 'あり' : 'なし' },
                 { label: '連絡先メール', value: viewing.email },
                 { label: '設立年月日', value: formatDate(viewing.establishedOn) },
                 { label: '住所', value: formatAddress(viewing) },

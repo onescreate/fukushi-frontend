@@ -56,6 +56,7 @@ export function FacilityFormDialog({
   const [corporationId, setCorporationId] = useState('');
   const [name, setName] = useState('');
   const [serviceType, setServiceType] = useState<ServiceType>('continuous_b');
+  const [mealsEnabled, setMealsEnabled] = useState(false);
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'active' | 'inactive'>('active');
   const [address, setAddress] = useState<AddressContactValue>(emptyAddressContact);
@@ -66,6 +67,7 @@ export function FacilityFormDialog({
       setCorporationId(target?.corporationId ?? me?.corporationId ?? '');
       setName(target?.name ?? '');
       setServiceType(target?.serviceType ?? 'continuous_b');
+      setMealsEnabled(target?.mealsEnabled ?? false);
       setEmail(target?.email ?? '');
       setStatus(target?.status ?? 'active');
       setAddress(addressContactFromEntity(target));
@@ -89,6 +91,7 @@ export function FacilityFormDialog({
       const common = {
         name,
         serviceType,
+        mealsEnabled,
         email: email || undefined,
         status,
         ...addressContactToInput(address),
@@ -175,6 +178,34 @@ export function FacilityFormDialog({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>食事提供</Label>
+            <div className="inline-flex rounded-md border bg-muted/50 p-0.5">
+              {(
+                [
+                  [true, 'あり'],
+                  [false, 'なし'],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setMealsEnabled(v)}
+                  className={`rounded-[5px] px-4 py-1.5 text-sm font-medium transition-colors ${
+                    mealsEnabled === v
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              「なし」の店舗では、職員・利用者ともに食事関連の機能が表示されません。
+            </p>
           </div>
 
           <div className="space-y-1.5">
