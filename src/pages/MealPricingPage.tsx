@@ -35,7 +35,7 @@ const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 export default function MealPricingPage() {
   const { data: me } = useMe();
-  const canManage = hasPermission(me, 'meal.manage');
+  const canManage = hasPermission(me, 'settings.price');
   const { data: facilities } = useUsersFacilityOptions();
   const [facilityId, setFacilityId] = useState('');
 
