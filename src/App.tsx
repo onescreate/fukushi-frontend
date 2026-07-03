@@ -4,6 +4,7 @@ import { RequirePerm } from './components/auth/RequirePerm';
 import LoginPage from './features/auth/LoginPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
+import HelpPage from './pages/HelpPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -60,6 +61,7 @@ export default function App() {
             </RequirePerm>
           }
         />
+        <Route path="/help" element={<HelpPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

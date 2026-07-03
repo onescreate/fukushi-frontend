@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   Building2,
   LayoutDashboard,
   Store,
@@ -34,4 +35,5 @@ export const NAV_ITEMS: NavItem[] = [
     permission: 'user.view',
   },
   { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
+  { label: 'ヘルプ・使い方', to: '/help', icon: BookOpen },
 ];
