@@ -13,6 +13,7 @@ import SchedulesPage from './pages/SchedulesPage';
 import ApprovalsPage from './pages/ApprovalsPage';
 import RosterPage from './pages/RosterPage';
 import AttendanceSettingsPage from './pages/AttendanceSettingsPage';
+import MealPricingPage from './pages/MealPricingPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -105,6 +106,14 @@ export default function App() {
           element={
             <RequirePerm perm="attendance.edit">
               <AttendanceSettingsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/meal-pricing"
+          element={
+            <RequirePerm perm="meal.view">
+              <MealPricingPage />
             </RequirePerm>
           }
         />

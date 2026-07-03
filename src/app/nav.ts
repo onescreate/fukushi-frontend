@@ -10,6 +10,7 @@ import {
   Tablet,
   UserRound,
   Users,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react';
 import type { Permission } from '../types/me';
@@ -62,6 +63,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/attendance-settings',
     icon: Settings,
     permission: 'attendance.edit',
+  },
+  {
+    label: '食事料金',
+    to: '/meal-pricing',
+    icon: UtensilsCrossed,
+    permission: 'meal.view',
   },
   { label: 'ヘルプ・使い方', to: '/help', icon: BookOpen },
 ];
