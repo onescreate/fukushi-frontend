@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Settings,
   Percent,
+  Receipt,
   Store,
   Tablet,
   UserRound,
@@ -65,6 +66,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/meal-approvals',
     icon: ClipboardCheck,
     permission: 'meal.manage',
+  },
+  {
+    label: '食事請求',
+    to: '/meal-billing',
+    icon: Receipt,
+    permission: 'billing.view',
   },
   {
     label: '当日ロースター',

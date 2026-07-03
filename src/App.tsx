@@ -18,6 +18,7 @@ import MealPricingPage from './pages/MealPricingPage';
 import TaxSettingsPage from './pages/TaxSettingsPage';
 import MealReservationsPage from './pages/MealReservationsPage';
 import MealApprovalsPage from './pages/MealApprovalsPage';
+import MealBillingPage from './pages/MealBillingPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -143,6 +144,14 @@ export default function App() {
           element={
             <RequirePerm perm="meal.manage">
               <MealApprovalsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/meal-billing"
+          element={
+            <RequirePerm perm="billing.view">
+              <MealBillingPage />
             </RequirePerm>
           }
         />
