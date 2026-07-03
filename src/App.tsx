@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import HelpPage from './pages/HelpPage';
 import SchedulesPage from './pages/SchedulesPage';
 import ApprovalsPage from './pages/ApprovalsPage';
+import AttendanceSettingsPage from './pages/AttendanceSettingsPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -85,6 +86,14 @@ export default function App() {
           element={
             <RequirePerm perm="schedule.approve">
               <ApprovalsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/attendance-settings"
+          element={
+            <RequirePerm perm="attendance.edit">
+              <AttendanceSettingsPage />
             </RequirePerm>
           }
         />
