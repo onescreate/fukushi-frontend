@@ -2,6 +2,7 @@ import {
   Building2,
   LayoutDashboard,
   Store,
+  Tablet,
   UserRound,
   Users,
   type LucideIcon,
@@ -32,4 +33,5 @@ export const NAV_ITEMS: NavItem[] = [
     icon: UserRound,
     permission: 'user.view',
   },
+  { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
 ];
