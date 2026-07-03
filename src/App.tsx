@@ -2,6 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import ProtectedLayout from './components/auth/ProtectedLayout';
 import { RequirePerm } from './components/auth/RequirePerm';
 import LoginPage from './features/auth/LoginPage';
+import PersonalLoginPage from './features/auth/PersonalLoginPage';
+import PersonalProtected from './components/auth/PersonalProtected';
+import PersonalSchedulePage from './pages/personal/PersonalSchedulePage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import HelpPage from './pages/HelpPage';
@@ -18,6 +21,12 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       {/* タブレット（キオスク）: 認証不要の公開画面 */}
       <Route path="/kiosk" element={<KioskPage />} />
+
+      {/* 利用者本人の個人ページ */}
+      <Route path="/my/login" element={<PersonalLoginPage />} />
+      <Route path="/my" element={<PersonalProtected />}>
+        <Route index element={<PersonalSchedulePage />} />
+      </Route>
 
       {/* 認証済みレイアウト（サイドバー＋ヘッダー） */}
       <Route element={<ProtectedLayout />}>

@@ -1,10 +1,10 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMe } from '../../features/auth/useMe';
-import AppLayout from '../layout/AppLayout';
+import PersonalLayout from '../layout/PersonalLayout';
 
-/** 未ログインなら /login へ。利用者なら個人ページへ。職員なら管理画面。 */
-export default function ProtectedLayout() {
+/** 利用者本人用エリアの保護。未ログイン→個人ログイン、職員→管理画面へ。 */
+export default function PersonalProtected() {
   const { firebaseUser, loading } = useAuth();
   const { data: me, isLoading } = useMe();
 
@@ -16,11 +16,11 @@ export default function ProtectedLayout() {
     );
   }
   if (!firebaseUser) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/my/login" replace />;
   }
-  if (me && me.type === 'user') {
-    // 利用者は個人ページへ
-    return <Navigate to="/my" replace />;
+  if (me && me.type !== 'user') {
+    // 職員が個人エリアに来た場合は管理画面へ
+    return <Navigate to="/" replace />;
   }
-  return <AppLayout />;
+  return <PersonalLayout />;
 }

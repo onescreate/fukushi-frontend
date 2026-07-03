@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -92,7 +92,10 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          © 就労支援 利用者管理システム
+          利用者の方は{' '}
+          <Link to="/my/login" className="text-indigo-600 underline">
+            こちらからログイン
+          </Link>
         </p>
       </div>
     </div>
