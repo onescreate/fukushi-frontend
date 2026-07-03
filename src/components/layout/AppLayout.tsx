@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LogOut, PanelLeft } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useMe } from '../../features/auth/useMe';
+import { hasPermission, useMe } from '../../features/auth/useMe';
+import { usePendingCount } from '../../features/schedules/approvalApi';
 import { NAV_ITEMS } from '../../app/nav';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -18,6 +19,9 @@ export default function AppLayout() {
   const { logout } = useAuth();
   const { data: me } = useMe();
   const location = useLocation();
+  const canApprove = hasPermission(me, 'schedule.approve');
+  const { data: pending } = usePendingCount(canApprove);
+  const pendingCount = pending?.count ?? 0;
 
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === '1',
@@ -82,7 +86,7 @@ export default function AppLayout() {
                 end={item.to === '/'}
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
-                  `flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
+                  `relative flex items-center rounded-md py-2 text-sm font-medium transition-colors ${
                     collapsed ? 'justify-center px-0' : 'gap-3 px-3'
                   } ${
                     isActive
@@ -92,7 +96,16 @@ export default function AppLayout() {
                 }
               >
                 <Icon className="size-4 shrink-0" />
-                {!collapsed && item.label}
+                {!collapsed && <span className="flex-1">{item.label}</span>}
+                {item.to === '/approvals' && pendingCount > 0 && (
+                  <span
+                    className={`flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ${
+                      collapsed ? 'absolute right-1 top-1 h-4' : 'h-5'
+                    }`}
+                  >
+                    {pendingCount}
+                  </span>
+                )}
               </NavLink>
             );
           })}

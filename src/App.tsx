@@ -9,6 +9,7 @@ import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import HelpPage from './pages/HelpPage';
 import SchedulesPage from './pages/SchedulesPage';
+import ApprovalsPage from './pages/ApprovalsPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -76,6 +77,14 @@ export default function App() {
           element={
             <RequirePerm perm="schedule.view">
               <SchedulesPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/approvals"
+          element={
+            <RequirePerm perm="schedule.approve">
+              <ApprovalsPage />
             </RequirePerm>
           }
         />
