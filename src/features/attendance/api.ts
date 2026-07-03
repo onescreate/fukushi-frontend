@@ -17,12 +17,19 @@ export function useAttendanceSettings(facilityId: string) {
   });
 }
 
+export interface RosterBreak {
+  plannedOut: string | null;
+  plannedIn: string | null;
+  note: string | null;
+}
+
 export interface RosterRow {
   userId: string;
   name: string;
   planIn: string | null;
   planOut: string | null;
   scheduleStatus: 'pending' | 'approved' | 'rejected' | null;
+  breaks: RosterBreak[];
   clockIn: string | null;
   clockOut: string | null;
   status: 'present' | 'absent' | 'notyet';

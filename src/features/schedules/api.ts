@@ -1,6 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 
+export interface ScheduleDetail {
+  id: string;
+  eventType: 'break_out' | 'practice' | 'other';
+  plannedOut: string | null;
+  plannedIn: string | null;
+  actualOut: string | null;
+  actualIn: string | null;
+  note: string | null;
+}
+
 export interface Schedule {
   id: string;
   userId: string;
@@ -9,6 +19,7 @@ export interface Schedule {
   planOut: string | null;
   status: 'pending' | 'approved' | 'rejected';
   note: string | null;
+  details?: ScheduleDetail[];
 }
 
 const KEY = ['schedules'];
@@ -59,6 +70,41 @@ export function useDeleteSchedule() {
   return useMutation({
     mutationFn: (id: string) =>
       apiClient.delete(`/schedules/${id}`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useAddScheduleDetail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      scheduleId,
+      plannedOut,
+      plannedIn,
+      note,
+    }: {
+      scheduleId: string;
+      plannedOut?: string;
+      plannedIn?: string;
+      note?: string;
+    }) =>
+      apiClient
+        .post<ScheduleDetail>(`/schedules/${scheduleId}/details`, {
+          eventType: 'break_out',
+          plannedOut,
+          plannedIn,
+          note,
+        })
+        .then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+export function useRemoveScheduleDetail() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (detailId: string) =>
+      apiClient.delete(`/schedules/details/${detailId}`).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

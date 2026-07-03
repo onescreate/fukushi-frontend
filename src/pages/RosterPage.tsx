@@ -121,10 +121,18 @@ export default function RosterPage() {
                   <TableCell className="font-medium text-foreground">
                     {r.name}
                   </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {r.planIn ?? '—'}
-                    {r.planIn || r.planOut ? '〜' : ''}
-                    {r.planOut ?? ''}
+                  <TableCell className="text-xs text-muted-foreground">
+                    <div className="font-mono">
+                      {r.planIn ?? '—'}
+                      {r.planIn || r.planOut ? '〜' : ''}
+                      {r.planOut ?? ''}
+                    </div>
+                    {r.breaks.map((b, i) => (
+                      <div key={i} className="mt-0.5 text-amber-600">
+                        中抜け {b.plannedOut ?? '—'}〜{b.plannedIn ?? '—'}
+                        {b.note ? `（${b.note}）` : ''}
+                      </div>
+                    ))}
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {r.clockIn ?? '—'}
