@@ -5,6 +5,7 @@ import LoginPage from './features/auth/LoginPage';
 import PersonalLoginPage from './features/auth/PersonalLoginPage';
 import PersonalProtected from './components/auth/PersonalProtected';
 import PersonalSchedulePage from './pages/personal/PersonalSchedulePage';
+import PersonalHistoryPage from './pages/personal/PersonalHistoryPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import HelpPage from './pages/HelpPage';
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/my/login" element={<PersonalLoginPage />} />
       <Route path="/my" element={<PersonalProtected />}>
         <Route index element={<PersonalSchedulePage />} />
+        <Route path="history" element={<PersonalHistoryPage />} />
       </Route>
 
       {/* 認証済みレイアウト（サイドバー＋ヘッダー） */}
