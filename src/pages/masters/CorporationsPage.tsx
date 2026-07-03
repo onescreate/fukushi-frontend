@@ -3,6 +3,8 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DetailDialog } from '@/components/DetailDialog';
+import { formatAddress, formatDate } from '../../lib/format';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -40,6 +42,7 @@ export default function CorporationsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Corporation | null>(null);
   const [deleting, setDeleting] = useState<Corporation | null>(null);
+  const [viewing, setViewing] = useState<Corporation | null>(null);
 
   const openCreate = () => {
     setEditing(null);
@@ -104,7 +107,11 @@ export default function CorporationsPage() {
             )}
 
             {data?.map((c) => (
-              <TableRow key={c.id}>
+              <TableRow
+                key={c.id}
+                className="cursor-pointer"
+                onClick={() => setViewing(c)}
+              >
                 <TableCell className="font-medium text-foreground">
                   {c.name}
                 </TableCell>
@@ -120,7 +127,7 @@ export default function CorporationsPage() {
                 <TableCell className="text-muted-foreground">
                   {new Date(c.createdAt).toLocaleDateString('ja-JP')}
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-1">
                     <Button
                       variant="ghost"
@@ -145,6 +152,30 @@ export default function CorporationsPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <DetailDialog
+        open={!!viewing}
+        onOpenChange={(o) => !o && setViewing(null)}
+        title={viewing?.name ?? ''}
+        description="法人の詳細"
+        rows={
+          viewing
+            ? [
+                { label: 'ステータス', value: viewing.status === 'active' ? '有効' : '無効' },
+                { label: '設立年月日', value: formatDate(viewing.establishedOn) },
+                { label: '住所', value: formatAddress(viewing) },
+                { label: '電話番号', value: viewing.phone },
+                { label: '店舗数', value: `${viewing._count?.facilities ?? 0}` },
+                { label: '利用者数', value: `${viewing._count?.users ?? 0}` },
+                { label: '登録日', value: formatDate(viewing.createdAt) },
+              ]
+            : []
+        }
+        onEdit={() => {
+          if (viewing) openEdit(viewing);
+          setViewing(null);
+        }}
+      />
 
       <CorporationFormDialog
         open={formOpen}

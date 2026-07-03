@@ -3,6 +3,7 @@ import { KeyRound, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DetailDialog } from '@/components/DetailDialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -41,6 +42,7 @@ export default function StaffPage() {
   const [editing, setEditing] = useState<Staff | null>(null);
   const [resetting, setResetting] = useState<Staff | null>(null);
   const [deleting, setDeleting] = useState<Staff | null>(null);
+  const [viewing, setViewing] = useState<Staff | null>(null);
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -100,7 +102,11 @@ export default function StaffPage() {
             )}
 
             {data?.map((s) => (
-              <TableRow key={s.id}>
+              <TableRow
+                key={s.id}
+                className="cursor-pointer"
+                onClick={() => setViewing(s)}
+              >
                 <TableCell className="font-medium text-foreground">
                   {s.lastName} {s.firstName}
                 </TableCell>
@@ -119,7 +125,7 @@ export default function StaffPage() {
                     </span>
                   )}
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-1">
                     <Button
                       variant="ghost"
@@ -155,6 +161,29 @@ export default function StaffPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <DetailDialog
+        open={!!viewing}
+        onOpenChange={(o) => !o && setViewing(null)}
+        title={viewing ? `${viewing.lastName} ${viewing.firstName}` : ''}
+        description="職員の詳細"
+        rows={
+          viewing
+            ? [
+                { label: 'メールアドレス', value: viewing.email },
+                { label: '権限', value: roleText(viewing) },
+                { label: 'ステータス', value: viewing.status === 'active' ? '有効' : '無効' },
+              ]
+            : []
+        }
+        onEdit={() => {
+          if (viewing) {
+            setEditing(viewing);
+            setFormOpen(true);
+          }
+          setViewing(null);
+        }}
+      />
 
       <StaffFormDialog
         open={formOpen}

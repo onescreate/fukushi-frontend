@@ -3,6 +3,8 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { DetailDialog } from '@/components/DetailDialog';
+import { formatAddress, formatDate } from '../../lib/format';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -32,6 +34,7 @@ export default function FacilitiesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Facility | null>(null);
   const [deleting, setDeleting] = useState<Facility | null>(null);
+  const [viewing, setViewing] = useState<Facility | null>(null);
 
   const handleDelete = async () => {
     if (!deleting) return;
@@ -94,7 +97,11 @@ export default function FacilitiesPage() {
             )}
 
             {data?.map((f) => (
-              <TableRow key={f.id}>
+              <TableRow
+                key={f.id}
+                className="cursor-pointer"
+                onClick={() => setViewing(f)}
+              >
                 {showCorp && (
                   <TableCell className="text-muted-foreground">
                     {f.corporation?.name ?? '—'}
@@ -120,7 +127,7 @@ export default function FacilitiesPage() {
                 <TableCell className="text-right tabular-nums">
                   {f._count?.users ?? 0}
                 </TableCell>
-                <TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
                   <div className="flex justify-end gap-1">
                     <Button
                       variant="ghost"
@@ -148,6 +155,40 @@ export default function FacilitiesPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <DetailDialog
+        open={!!viewing}
+        onOpenChange={(o) => !o && setViewing(null)}
+        title={viewing?.name ?? ''}
+        description="店舗の詳細"
+        rows={
+          viewing
+            ? [
+                { label: '法人', value: viewing.corporation?.name },
+                {
+                  label: 'サービス種別',
+                  value: viewing.serviceType
+                    ? SERVICE_TYPE_LABELS[viewing.serviceType]
+                    : '',
+                },
+                { label: 'ステータス', value: viewing.status === 'active' ? '有効' : '無効' },
+                { label: '連絡先メール', value: viewing.email },
+                { label: '設立年月日', value: formatDate(viewing.establishedOn) },
+                { label: '住所', value: formatAddress(viewing) },
+                { label: '電話番号', value: viewing.phone },
+                { label: '利用者数', value: `${viewing._count?.users ?? 0}` },
+                { label: '備考', value: viewing.remarks },
+              ]
+            : []
+        }
+        onEdit={() => {
+          if (viewing) {
+            setEditing(viewing);
+            setFormOpen(true);
+          }
+          setViewing(null);
+        }}
+      />
 
       <FacilityFormDialog
         open={formOpen}
