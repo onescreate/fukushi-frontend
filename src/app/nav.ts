@@ -3,6 +3,7 @@ import {
   Building2,
   CalendarCheck,
   CalendarDays,
+  ClipboardList,
   LayoutDashboard,
   Settings,
   Store,
@@ -48,6 +49,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/approvals',
     icon: CalendarCheck,
     permission: 'schedule.approve',
+  },
+  {
+    label: '当日ロースター',
+    to: '/roster',
+    icon: ClipboardList,
+    permission: 'attendance.view',
   },
   { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
   {
