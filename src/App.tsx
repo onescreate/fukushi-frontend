@@ -9,6 +9,7 @@ import PersonalMealPage from './pages/personal/PersonalMealPage';
 import PersonalHistoryPage from './pages/personal/PersonalHistoryPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import HelpPage from './pages/HelpPage';
 import SchedulesPage from './pages/SchedulesPage';
 import ApprovalsPage from './pages/ApprovalsPage';
@@ -50,6 +51,14 @@ export default function App() {
       {/* 認証済みレイアウト（サイドバー＋ヘッダー） */}
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route
+          path="/analytics"
+          element={
+            <RequirePerm perm="attendance.view">
+              <AnalyticsPage />
+            </RequirePerm>
+          }
+        />
         <Route
           path="/corporations"
           element={

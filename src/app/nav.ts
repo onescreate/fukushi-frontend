@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   BookOpen,
   Building2,
   FileText,
@@ -32,6 +33,12 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'ダッシュボード', to: '/', icon: LayoutDashboard },
+  {
+    label: '分析',
+    to: '/analytics',
+    icon: BarChart3,
+    permission: 'attendance.view',
+  },
   {
     label: '法人管理',
     to: '/corporations',
