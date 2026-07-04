@@ -14,6 +14,7 @@ import HelpPage from './pages/HelpPage';
 import SchedulesPage from './pages/SchedulesPage';
 import ApprovalsPage from './pages/ApprovalsPage';
 import RosterPage from './pages/RosterPage';
+import AttendanceListPage from './pages/AttendanceListPage';
 import AttendanceSettingsPage from './pages/AttendanceSettingsPage';
 import MealPricingPage from './pages/MealPricingPage';
 import TaxSettingsPage from './pages/TaxSettingsPage';
@@ -53,6 +54,14 @@ export default function App() {
       {/* 認証済みレイアウト（サイドバー＋ヘッダー） */}
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route
+          path="/attendance-list"
+          element={
+            <RequirePerm perm="attendance.view">
+              <AttendanceListPage />
+            </RequirePerm>
+          }
+        />
         <Route
           path="/analytics"
           element={

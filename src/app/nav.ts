@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   CalendarDays,
   ClipboardCheck,
+  ClipboardList,
   LayoutDashboard,
   Settings,
   Percent,
@@ -107,6 +108,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/invoice-settings',
     icon: FileText,
     permission: 'billing.issue',
+  },
+  {
+    label: '打刻データ一覧',
+    to: '/attendance-list',
+    icon: ClipboardList,
+    permission: 'attendance.view',
   },
   { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
   {

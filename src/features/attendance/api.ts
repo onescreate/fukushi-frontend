@@ -71,7 +71,48 @@ export function useManualAttendance() {
   return useMutation({
     mutationFn: (data: ManualAttendanceInput) =>
       apiClient.patch('/attendance/manual', data).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['roster'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['roster'] });
+      qc.invalidateQueries({ queryKey: ['attendance-list'] });
+    },
+  });
+}
+
+export interface AttendanceListRow {
+  key: string;
+  userId: string;
+  userName: string;
+  facilityName: string | null;
+  date: string;
+  planIn: string | null;
+  planOut: string | null;
+  actIn: string | null;
+  actOut: string | null;
+  status: 'present' | 'absent' | 'notyet';
+  reason: string | null;
+}
+
+export interface AttendanceListData {
+  year: number;
+  month: number;
+  allMode: boolean;
+  rows: AttendanceListRow[];
+}
+
+export function useAttendanceList(
+  facilityId: string,
+  year: number,
+  month: number,
+) {
+  return useQuery<AttendanceListData>({
+    queryKey: ['attendance-list', facilityId, year, month],
+    queryFn: async () =>
+      (
+        await apiClient.get<AttendanceListData>('/attendance/list', {
+          params: { facilityId, year, month },
+        })
+      ).data,
+    enabled: !!facilityId,
   });
 }
 
