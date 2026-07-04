@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
 import { usePendingCount } from '../../features/schedules/approvalApi';
 import { usePendingMealCount } from '../../features/meals/reservationApi';
+import { useBadges } from '../../features/stats/api';
 import { NAV_ITEMS } from '../../app/nav';
 
 const ROLE_LABEL: Record<string, string> = {
@@ -27,6 +28,17 @@ export default function AppLayout() {
   const canApproveMeal = hasPermission(me, 'meal.manage');
   const { data: mealPending } = usePendingMealCount(canApproveMeal);
   const mealPendingCount = mealPending?.count ?? 0;
+
+  const canSeeBadges =
+    hasPermission(me, 'billing.view') || hasPermission(me, 'meal.delivery.manage');
+  const { data: badges } = useBadges(canSeeBadges);
+  const badgeCountFor = (to: string) => {
+    if (to === '/meal-billing') return badges?.unpaid ?? 0;
+    if (to === '/meal-deliveries') return badges?.deliveryMissing ?? 0;
+    if (to === '/approvals') return pendingCount;
+    if (to === '/meal-approvals') return mealPendingCount;
+    return 0;
+  };
 
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === '1',
@@ -102,22 +114,13 @@ export default function AppLayout() {
               >
                 <Icon className="size-4 shrink-0" />
                 {!collapsed && <span className="flex-1">{item.label}</span>}
-                {item.to === '/approvals' && pendingCount > 0 && (
+                {badgeCountFor(item.to) > 0 && (
                   <span
                     className={`flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ${
                       collapsed ? 'absolute right-1 top-1 h-4' : 'h-5'
                     }`}
                   >
-                    {pendingCount}
-                  </span>
-                )}
-                {item.to === '/meal-approvals' && mealPendingCount > 0 && (
-                  <span
-                    className={`flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ${
-                      collapsed ? 'absolute right-1 top-1 h-4' : 'h-5'
-                    }`}
-                  >
-                    {mealPendingCount}
+                    {badgeCountFor(item.to)}
                   </span>
                 )}
               </NavLink>

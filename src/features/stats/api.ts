@@ -28,6 +28,21 @@ export interface FacilityStats {
   } | null;
 }
 
+export interface Badges {
+  unpaid: number;
+  deliveryMissing: number;
+}
+
+export function useBadges(enabled = true) {
+  return useQuery<Badges>({
+    queryKey: ['stats', 'badges'],
+    queryFn: async () =>
+      (await apiClient.get<Badges>('/stats/badges')).data,
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
 export function useFacilityStats(
   facilityId: string,
   year: number,

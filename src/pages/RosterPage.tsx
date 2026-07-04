@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pencil, Utensils } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -43,6 +43,11 @@ export default function RosterPage() {
   const canEdit = hasPermission(me, 'attendance.edit');
   const { data: facilities } = useUsersFacilityOptions();
   const [facilityId, setFacilityId] = useState('');
+  useEffect(() => {
+    if (!facilityId && facilities && facilities.length > 0) {
+      setFacilityId(facilities[0].id);
+    }
+  }, [facilities, facilityId]);
   const now = new Date();
   const [date, setDate] = useState(
     `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
-import { useMe } from '../features/auth/useMe';
+import { useMe, hasPermission } from '../features/auth/useMe';
 import { NAV_ITEMS } from '../app/nav';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
+import RosterPage from './RosterPage';
 
 const DESCRIPTIONS: Record<string, string> = {
   '/corporations': '法人の登録・編集',
@@ -15,6 +16,12 @@ const DESCRIPTIONS: Record<string, string> = {
 export default function DashboardPage() {
   const { data: me } = useMe();
 
+  // 旧システム踏襲: ログイン後のトップは当日ロースター（その日の通所状況）。
+  if (hasPermission(me, 'attendance.view')) {
+    return <RosterPage />;
+  }
+
+  // 通所閲覧の権限がない場合はメニューのショートカットを表示。
   const quickLinks = NAV_ITEMS.filter(
     (item) =>
       item.to !== '/' &&
@@ -40,9 +47,7 @@ export default function DashboardPage() {
                       <Icon className="size-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground">
-                        {item.label}
-                      </p>
+                      <p className="font-semibold text-foreground">{item.label}</p>
                       <p className="truncate text-sm text-muted-foreground">
                         {DESCRIPTIONS[item.to] ?? ''}
                       </p>
