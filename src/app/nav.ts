@@ -12,6 +12,7 @@ import {
   Receipt,
   Store,
   Tablet,
+  Truck,
   UserRound,
   Users,
   Utensils,
@@ -73,6 +74,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/meal-billing',
     icon: Receipt,
     permission: 'billing.view',
+  },
+  {
+    label: '食事納品',
+    to: '/meal-deliveries',
+    icon: Truck,
+    permission: 'meal.delivery.manage',
   },
   {
     label: '請求書設定',
