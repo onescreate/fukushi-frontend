@@ -1,5 +1,13 @@
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, FileText, Pencil, Printer } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Lock,
+  Pencil,
+  Printer,
+  Unlock,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -33,6 +41,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { BillingDetailDialog } from '../features/meals/BillingDetailDialog';
 import { useUsersFacilityOptions } from '../features/users/api';
 import {
+  useBillingClose,
   useMealBilling,
   useSetBillingNote,
   useSetPayment,
@@ -129,8 +138,33 @@ export default function MealBillingPage() {
   };
 
   const canIssue = hasPermission(me, 'billing.issue');
+  const canClose = hasPermission(me, 'closing.manage');
   const hasActions = canPay || canIssue;
   const colCount = hasActions ? 8 : 7;
+
+  const closeMonth = useBillingClose(false);
+  const reopenMonth = useBillingClose(true);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [confirmReopen, setConfirmReopen] = useState(false);
+
+  const doClose = async () => {
+    try {
+      await closeMonth.mutateAsync({ facilityId, year, month });
+      toast.success(`${year}年${month}月を締めました`);
+      setConfirmClose(false);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
+  const doReopen = async () => {
+    try {
+      await reopenMonth.mutateAsync({ facilityId, year, month });
+      toast.success(`${year}年${month}月の締めを解除しました`);
+      setConfirmReopen(false);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
 
   const openInvoice = (userId?: string) => {
     const q = new URLSearchParams({
@@ -191,9 +225,34 @@ export default function MealBillingPage() {
                 一括発行
               </Button>
             )}
+            {canClose &&
+              (data.closed ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmReopen(true)}
+                >
+                  <Unlock className="mr-1.5 size-4" />
+                  締めを解除
+                </Button>
+              ) : (
+                totals.count > 0 && (
+                  <Button size="sm" onClick={() => setConfirmClose(true)}>
+                    <Lock className="mr-1.5 size-4" />
+                    月を締める
+                  </Button>
+                )
+              ))}
           </div>
         )}
       </div>
+
+      {facilityId && data?.closed && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
+          <Lock className="size-4" />
+          この月は締め済みです（確定額で固定。食事の予約・喫食・取消はできません）。訂正する場合は「締めを解除」してください。
+        </div>
+      )}
 
       {facilityId && (
         <Card className="overflow-hidden p-0">
@@ -371,6 +430,24 @@ export default function MealBillingPage() {
         userName={detailTarget?.userName ?? ''}
         year={year}
         month={month}
+      />
+
+      <ConfirmDialog
+        open={confirmClose}
+        onOpenChange={setConfirmClose}
+        title={`${year}年${month}月を締めますか？`}
+        description="確定額を保存し、この月の食事の予約・喫食・取消をロックします。訂正が必要になったら締めを解除できます。"
+        confirmLabel="締める"
+        onConfirm={doClose}
+      />
+
+      <ConfirmDialog
+        open={confirmReopen}
+        onOpenChange={setConfirmReopen}
+        title={`${year}年${month}月の締めを解除しますか？`}
+        description="食事の編集が再び可能になります。訂正後は再度締めて請求書を再発行してください。"
+        confirmLabel="締めを解除"
+        onConfirm={doReopen}
       />
 
       <ConfirmDialog

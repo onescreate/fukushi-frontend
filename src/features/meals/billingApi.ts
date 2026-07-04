@@ -20,6 +20,8 @@ export interface BillingList {
   year: number;
   month: number;
   taxRate: number | null;
+  closed: boolean;
+  closedAt: string | null;
   rows: BillingRow[];
 }
 
@@ -84,5 +86,19 @@ export function useSetBillingNote() {
     }) => apiClient.patch('/meal-billing/note', data).then((r) => r.data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ['meal-billing'] }),
+  });
+}
+
+/** 月締め / 締め解除 */
+export function useBillingClose(reopen = false) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { facilityId: string; year: number; month: number }) =>
+      apiClient
+        .post(`/meal-billing/${reopen ? 'reopen' : 'close'}`, data)
+        .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meal-billing'] });
+    },
   });
 }
