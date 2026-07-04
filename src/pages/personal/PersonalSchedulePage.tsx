@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useMySchedules } from '../../features/schedules/myApi';
 import type { Schedule } from '../../features/schedules/api';
+import { useMyAnnouncements } from '../../features/announcements/api';
+import { formatDate } from '../../lib/format';
 import { PersonalSubmitDialog } from './PersonalSubmitDialog';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -23,6 +25,7 @@ export default function PersonalSchedulePage() {
   const from = `${year}-${pad(month)}-01`;
   const to = `${year}-${pad(month)}-${pad(daysInMonth)}`;
   const { data: schedules } = useMySchedules(from, to);
+  const { data: notices } = useMyAnnouncements();
 
   const byDate = useMemo(() => {
     const map = new Map<string, Schedule>();
@@ -51,6 +54,25 @@ export default function PersonalSchedulePage() {
 
   return (
     <div>
+      {(notices ?? []).length > 0 && (
+        <div className="mb-4 space-y-2">
+          {(notices ?? []).slice(0, 3).map((n) => (
+            <Card key={n.id} className="border-indigo-100 bg-indigo-50/50 p-3.5">
+              <div className="flex items-baseline gap-2">
+                <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
+                  お知らせ
+                </span>
+                <p className="font-semibold text-slate-800">{n.title}</p>
+                <span className="ml-auto text-xs text-slate-400">
+                  {formatDate(n.publishedOn)}
+                </span>
+              </div>
+              <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">{n.body}</p>
+            </Card>
+          ))}
+        </div>
+      )}
+
       <div className="mb-4">
         <h1 className="text-lg font-bold text-slate-800">通所予定</h1>
         <p className="text-sm text-slate-500">

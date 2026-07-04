@@ -19,7 +19,8 @@ export type Permission =
   | 'settings.tax'
   | 'health.view'
   | 'health.edit'
-  | 'closing.manage';
+  | 'closing.manage'
+  | 'announcement.manage';
 
 export interface FacilityRole {
   facilityId: string | null;

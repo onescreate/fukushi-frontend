@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { useUsersFacilityOptions } from '../features/users/api';
 import { useFacilityStats } from '../features/stats/api';
+import { useStaffAnnouncements } from '../features/announcements/api';
+import { formatDate } from '../lib/format';
 
 const DESCRIPTIONS: Record<string, string> = {
   '/corporations': '法人の登録・編集',
@@ -75,6 +77,7 @@ function StatsPanel() {
   }, [facilities, facilityId]);
 
   const { data } = useFacilityStats(facilityId, year, month);
+  const { data: notices } = useStaffAnnouncements(facilityId);
 
   const changeMonth = (delta: number) => {
     let m = month + delta;
@@ -125,6 +128,28 @@ function StatsPanel() {
 
       {!facilityId ? null : (
         <>
+          {/* お知らせ（職員向け） */}
+          {(notices ?? []).length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-semibold text-foreground">お知らせ</p>
+              <div className="space-y-2">
+                {(notices ?? []).slice(0, 5).map((n) => (
+                  <Card key={n.id} className="p-3.5">
+                    <div className="flex items-baseline gap-2">
+                      <p className="font-medium text-foreground">{n.title}</p>
+                      <span className="text-xs text-muted-foreground">
+                        {formatDate(n.publishedOn)}
+                      </span>
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                      {n.body}
+                    </p>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 通所 */}
           <Section title="通所">
             <Card className="col-span-2">

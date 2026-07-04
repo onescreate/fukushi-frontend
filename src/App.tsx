@@ -22,6 +22,7 @@ import MealBillingPage from './pages/MealBillingPage';
 import InvoiceSettingsPage from './pages/InvoiceSettingsPage';
 import InvoicePrintPage from './pages/InvoicePrintPage';
 import MealDeliveryPage from './pages/MealDeliveryPage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -174,6 +175,14 @@ export default function App() {
           element={
             <RequirePerm perm="meal.delivery.manage">
               <MealDeliveryPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/announcements"
+          element={
+            <RequirePerm perm="announcement.manage">
+              <AnnouncementsPage />
             </RequirePerm>
           }
         />

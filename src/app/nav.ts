@@ -2,6 +2,7 @@ import {
   BookOpen,
   Building2,
   FileText,
+  Megaphone,
   CalendarCheck,
   CalendarDays,
   ClipboardCheck,
@@ -111,6 +112,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/tax-settings',
     icon: Percent,
     permission: 'settings.tax',
+  },
+  {
+    label: 'お知らせ',
+    to: '/announcements',
+    icon: Megaphone,
+    permission: 'announcement.manage',
   },
   { label: 'ヘルプ・使い方', to: '/help', icon: BookOpen },
 ];
