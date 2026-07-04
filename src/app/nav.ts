@@ -1,6 +1,7 @@
 import {
   BookOpen,
   Building2,
+  FileText,
   CalendarCheck,
   CalendarDays,
   ClipboardCheck,
@@ -72,6 +73,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/meal-billing',
     icon: Receipt,
     permission: 'billing.view',
+  },
+  {
+    label: '請求書設定',
+    to: '/invoice-settings',
+    icon: FileText,
+    permission: 'billing.issue',
   },
   {
     label: '当日ロースター',

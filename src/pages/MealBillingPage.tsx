@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Pencil, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -128,7 +128,19 @@ export default function MealBillingPage() {
     }
   };
 
-  const colCount = canPay ? 8 : 7;
+  const canIssue = hasPermission(me, 'billing.issue');
+  const hasActions = canPay || canIssue;
+  const colCount = hasActions ? 8 : 7;
+
+  const openInvoice = (userId?: string) => {
+    const q = new URLSearchParams({
+      facilityId,
+      year: String(year),
+      month: String(month),
+      ...(userId ? { userId } : {}),
+    });
+    window.open(`/meal-billing/print?${q.toString()}`, '_blank');
+  };
 
   return (
     <div>
@@ -168,9 +180,17 @@ export default function MealBillingPage() {
           </Button>
         </div>
         {facilityId && data && (
-          <div className="ml-auto text-sm text-muted-foreground">
-            請求合計 <span className="font-semibold text-foreground">{yen(totals.total)}</span>
-            （うち消費税 {yen(totals.tax)}） / 入金 {totals.paid}・{totals.count}件
+          <div className="ml-auto flex items-center gap-4">
+            <div className="text-sm text-muted-foreground">
+              請求合計 <span className="font-semibold text-foreground">{yen(totals.total)}</span>
+              （うち消費税 {yen(totals.tax)}） / 入金 {totals.paid}・{totals.count}件
+            </div>
+            {canIssue && totals.count > 0 && (
+              <Button variant="outline" size="sm" onClick={() => openInvoice()}>
+                <Printer className="mr-1.5 size-4" />
+                一括発行
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -187,7 +207,7 @@ export default function MealBillingPage() {
                 <TableHead className="text-right">税込合計</TableHead>
                 <TableHead className="text-right">うち消費税</TableHead>
                 <TableHead>入金</TableHead>
-                {canPay && <TableHead className="w-10" />}
+                {hasActions && <TableHead className="w-20 text-right">操作</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -252,19 +272,36 @@ export default function MealBillingPage() {
                         </button>
                       )}
                     </TableCell>
-                    {canPay && (
+                    {hasActions && (
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openNote(r);
-                          }}
-                          title="メモ"
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
+                        <div className="flex justify-end gap-0.5">
+                          {canPay && (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openNote(r);
+                              }}
+                              title="メモ"
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          )}
+                          {canIssue && (
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInvoice(r.userId);
+                              }}
+                              title="請求書"
+                            >
+                              <FileText className="size-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     )}
                   </TableRow>

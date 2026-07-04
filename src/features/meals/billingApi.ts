@@ -6,6 +6,7 @@ export interface BillingRow {
   userName: string;
   mealCount: number;
   mealTotal: number;
+  cancelCount: number;
   cancelTotal: number;
   total: number; // 税込
   taxAmount: number; // 内消費税額

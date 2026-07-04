@@ -19,6 +19,8 @@ import TaxSettingsPage from './pages/TaxSettingsPage';
 import MealReservationsPage from './pages/MealReservationsPage';
 import MealApprovalsPage from './pages/MealApprovalsPage';
 import MealBillingPage from './pages/MealBillingPage';
+import InvoiceSettingsPage from './pages/InvoiceSettingsPage';
+import InvoicePrintPage from './pages/InvoicePrintPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -31,6 +33,9 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       {/* タブレット（キオスク）: 認証不要の公開画面 */}
       <Route path="/kiosk" element={<KioskPage />} />
+
+      {/* 請求書印刷（サイドバーなしの独立ページ・自前で認証チェック） */}
+      <Route path="/meal-billing/print" element={<InvoicePrintPage />} />
 
       {/* 利用者本人の個人ページ */}
       <Route path="/my/login" element={<PersonalLoginPage />} />
@@ -152,6 +157,14 @@ export default function App() {
           element={
             <RequirePerm perm="billing.view">
               <MealBillingPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/invoice-settings"
+          element={
+            <RequirePerm perm="billing.issue">
+              <InvoiceSettingsPage />
             </RequirePerm>
           }
         />
