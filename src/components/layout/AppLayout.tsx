@@ -6,6 +6,7 @@ import { hasPermission, useMe } from '../../features/auth/useMe';
 import { usePendingCount } from '../../features/schedules/approvalApi';
 import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { useBadges } from '../../features/stats/api';
+import { useHealthMissingCount } from '../../features/health/api';
 import { NAV_ITEMS } from '../../app/nav';
 import { FacilityProvider } from '../../contexts/FacilityContext';
 import { FacilitySwitcher } from './FacilitySwitcher';
@@ -34,9 +35,12 @@ export default function AppLayout() {
   const canSeeBadges =
     hasPermission(me, 'billing.view') || hasPermission(me, 'meal.delivery.manage');
   const { data: badges } = useBadges(canSeeBadges);
+  const canViewHealth = hasPermission(me, 'health.view');
+  const { data: healthMissing } = useHealthMissingCount(canViewHealth);
   const badgeCountFor = (to: string) => {
     if (to === '/meal-billing') return badges?.unpaid ?? 0;
     if (to === '/meal-deliveries') return badges?.deliveryMissing ?? 0;
+    if (to === '/health-records') return healthMissing?.count ?? 0;
     if (to === '/approvals') return pendingCount;
     if (to === '/meal-approvals') return mealPendingCount;
     return 0;

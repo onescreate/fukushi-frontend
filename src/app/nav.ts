@@ -1,7 +1,9 @@
 import {
+  Activity,
   BarChart3,
   BookOpen,
   Building2,
+  FileCheck2,
   FileText,
   Megaphone,
   CalendarCheck,
@@ -37,6 +39,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/analytics',
     icon: BarChart3,
     permission: 'attendance.view',
+  },
+  {
+    label: '締め業務',
+    to: '/closing-operations',
+    icon: FileCheck2,
+    permission: 'closing.manage',
   },
   {
     label: '法人管理',
@@ -87,6 +95,12 @@ export const NAV_ITEMS: NavItem[] = [
     to: '/meal-deliveries',
     icon: Truck,
     permission: 'meal.delivery.manage',
+  },
+  {
+    label: '体重・BMI',
+    to: '/health-records',
+    icon: Activity,
+    permission: 'health.view',
   },
   {
     label: '請求書設定',

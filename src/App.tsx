@@ -24,6 +24,8 @@ import InvoiceSettingsPage from './pages/InvoiceSettingsPage';
 import InvoicePrintPage from './pages/InvoicePrintPage';
 import MealDeliveryPage from './pages/MealDeliveryPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
+import HealthRecordsPage from './pages/HealthRecordsPage';
+import ClosingOperationsPage from './pages/ClosingOperationsPage';
 import CorporationsPage from './pages/masters/CorporationsPage';
 import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
@@ -192,6 +194,22 @@ export default function App() {
           element={
             <RequirePerm perm="announcement.manage">
               <AnnouncementsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/health-records"
+          element={
+            <RequirePerm perm="health.view">
+              <HealthRecordsPage />
+            </RequirePerm>
+          }
+        />
+        <Route
+          path="/closing-operations"
+          element={
+            <RequirePerm perm="closing.manage">
+              <ClosingOperationsPage />
             </RequirePerm>
           }
         />
