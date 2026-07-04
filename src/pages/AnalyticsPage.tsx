@@ -1,16 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import { useFacilityStats } from '../features/stats/api';
 import { useStaffAnnouncements } from '../features/announcements/api';
 import { formatDate } from '../lib/format';
@@ -53,17 +46,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function AnalyticsPage() {
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-
-  useEffect(() => {
-    if (!facilityId && facilities && facilities.length > 0) {
-      setFacilityId(facilities[0].id);
-    }
-  }, [facilities, facilityId]);
 
   const { data } = useFacilityStats(facilityId, year, month);
   const { data: notices } = useStaffAnnouncements(facilityId);
@@ -88,24 +74,6 @@ export default function AnalyticsPage() {
       />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="w-56">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
             <ChevronLeft className="size-4" />

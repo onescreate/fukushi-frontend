@@ -11,14 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useUsersFacilityOptions, useUsersList } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
+import { useUsersList } from '../features/users/api';
 import {
   MEAL_STATUS_LABELS,
   useMealReservations,
@@ -46,9 +40,8 @@ function approvalBadge(m: MealWithUser) {
 export default function MealReservationsPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'meal.manage');
-  const { data: facilities } = useUsersFacilityOptions();
+  const { facilityId } = useFacility();
   const { data: allUsers } = useUsersList();
-  const [facilityId, setFacilityId] = useState('');
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -88,25 +81,6 @@ export default function MealReservationsPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-56">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
             <ChevronLeft className="size-4" />

@@ -7,6 +7,8 @@ import { usePendingCount } from '../../features/schedules/approvalApi';
 import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { useBadges } from '../../features/stats/api';
 import { NAV_ITEMS } from '../../app/nav';
+import { FacilityProvider } from '../../contexts/FacilityContext';
+import { FacilitySwitcher } from './FacilitySwitcher';
 
 const ROLE_LABEL: Record<string, string> = {
   system_admin: 'システム管理者',
@@ -64,6 +66,7 @@ export default function AppLayout() {
     : '';
 
   return (
+    <FacilityProvider>
     <div className="min-h-screen bg-muted/40">
       {/* サイドバー */}
       <aside
@@ -176,6 +179,9 @@ export default function AppLayout() {
           <h1 className="text-sm font-semibold text-foreground">
             {current?.label ?? ''}
           </h1>
+          <div className="ml-auto">
+            <FacilitySwitcher />
+          </div>
         </header>
 
         <main className="flex-1 px-8 py-8">
@@ -185,5 +191,6 @@ export default function AppLayout() {
         </main>
       </div>
     </div>
+    </FacilityProvider>
   );
 }

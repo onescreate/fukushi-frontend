@@ -11,14 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import {
   useAttendanceSettings,
   useUpdateAttendanceSettings,
@@ -29,8 +22,7 @@ import { getApiErrorMessage } from '../lib/errors';
 export default function AttendanceSettingsPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
 
   const { data: settings } = useAttendanceSettings(facilityId);
   const update = useUpdateAttendanceSettings();
@@ -64,27 +56,6 @@ export default function AttendanceSettingsPage() {
         title="打刻設定"
         description="遅刻・早退と判定する猶予時間を店舗ごとに設定します。"
       />
-
-      <div className="mb-4 w-64">
-        <Select
-          items={Object.fromEntries(
-            (facilities ?? []).map((f) => [f.id, f.name]),
-          )}
-          value={facilityId || null}
-          onValueChange={(v) => setFacilityId((v as string) ?? '')}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="店舗を選択" />
-          </SelectTrigger>
-          <SelectContent>
-            {(facilities ?? []).map((f) => (
-              <SelectItem key={f.id} value={f.id}>
-                {f.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {facilityId && (
         <Card className="max-w-md">

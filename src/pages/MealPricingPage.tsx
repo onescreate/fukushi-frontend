@@ -12,15 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import {
   useMealPricings,
   useDeleteMealPricing,
@@ -36,8 +29,7 @@ const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 export default function MealPricingPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'settings.price');
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
 
   const { data: pricings, isLoading } = useMealPricings(facilityId);
   const del = useDeleteMealPricing();
@@ -73,34 +65,14 @@ export default function MealPricingPage() {
         description="食事料金・キャンセル料を店舗ごとに設定します。適用開始日つきで履歴管理し、利用日時点の料金を請求に使います。"
       />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="w-64">
-          <Select
-            items={Object.fromEntries(
-              (facilities ?? []).map((f) => [f.id, f.name]),
-            )}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {facilityId && canManage && (
+      {facilityId && canManage && (
+        <div className="mb-4 flex justify-end">
           <Button onClick={openCreate}>
             <Plus className="mr-1.5 size-4" />
             料金を追加
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {facilityId && (
         <Card>

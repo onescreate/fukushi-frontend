@@ -1,17 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Check, Pencil, Utensils, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -20,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import { hasPermission, useMe } from '../features/auth/useMe';
 import { useRoster, type RosterRow } from '../features/attendance/api';
 import { useAdminMealUpsert } from '../features/meals/reservationApi';
@@ -47,13 +40,7 @@ export default function RosterPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
   const canApprove = hasPermission(me, 'schedule.approve');
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
-  useEffect(() => {
-    if (!facilityId && facilities && facilities.length > 0) {
-      setFacilityId(facilities[0].id);
-    }
-  }, [facilities, facilityId]);
+  const { facilityId } = useFacility();
   const now = new Date();
   const [date, setDate] = useState(
     `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -110,24 +97,6 @@ export default function RosterPage() {
       />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="w-56">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <Input
           type="date"
           value={date}
@@ -138,7 +107,7 @@ export default function RosterPage() {
 
       {!facilityId ? (
         <Card className="px-6 py-16 text-center text-sm text-muted-foreground">
-          店舗を選ぶと、その日の状況が表示されます。
+          ヘッダーで店舗を選ぶと、その日の状況が表示されます。
         </Card>
       ) : (
         <div className="space-y-6">

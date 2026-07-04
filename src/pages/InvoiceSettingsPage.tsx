@@ -12,15 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import {
   useInvoiceSettings,
   useDeleteInvoiceSetting,
@@ -31,8 +24,7 @@ import { formatDate } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
 export default function InvoiceSettingsPage() {
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
   const { data: settings, isLoading } = useInvoiceSettings(facilityId);
   const del = useDeleteInvoiceSetting();
 
@@ -58,26 +50,8 @@ export default function InvoiceSettingsPage() {
         description="適格請求書に印字する発行者情報（事業者名・登録番号・住所・振込先）を店舗ごとに設定します。適用開始日つきで履歴管理します。"
       />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="w-64">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {facilityId && (
+      {facilityId && (
+        <div className="mb-4 flex justify-end">
           <Button
             onClick={() => {
               setEditing(null);
@@ -87,8 +61,8 @@ export default function InvoiceSettingsPage() {
             <Plus className="mr-1.5 size-4" />
             発行者情報を追加
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {facilityId && (
         <Card className="overflow-hidden p-0">

@@ -14,14 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import { useMealDeliveries, useSetDelivery } from '../features/meals/deliveryApi';
 import { formatDate } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
@@ -30,8 +23,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function MealDeliveryPage() {
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -102,24 +94,6 @@ export default function MealDeliveryPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-56">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
             <ChevronLeft className="size-4" />

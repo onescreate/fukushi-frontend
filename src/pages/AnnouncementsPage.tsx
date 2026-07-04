@@ -4,15 +4,8 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { useUsersFacilityOptions } from '../features/users/api';
+import { useFacility } from '../contexts/FacilityContext';
 import {
   AUDIENCE_LABELS,
   useAnnouncements,
@@ -30,8 +23,7 @@ const audienceCls: Record<string, string> = {
 };
 
 export default function AnnouncementsPage() {
-  const { data: facilities } = useUsersFacilityOptions();
-  const [facilityId, setFacilityId] = useState('');
+  const { facilityId } = useFacility();
   const { data: items, isLoading } = useAnnouncements(facilityId);
   const del = useDeleteAnnouncement();
 
@@ -57,25 +49,7 @@ export default function AnnouncementsPage() {
         description="利用者・職員へのお知らせを店舗ごとに投稿します。"
       />
 
-      <div className="mb-4 flex items-center justify-between gap-4">
-        <div className="w-64">
-          <Select
-            items={Object.fromEntries((facilities ?? []).map((f) => [f.id, f.name]))}
-            value={facilityId || null}
-            onValueChange={(v) => setFacilityId((v as string) ?? '')}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="店舗を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {(facilities ?? []).map((f) => (
-                <SelectItem key={f.id} value={f.id}>
-                  {f.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="mb-4 flex items-center justify-end gap-4">
         {facilityId && (
           <Button
             onClick={() => {
