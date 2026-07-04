@@ -40,7 +40,7 @@ export default function RosterPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
   const canApprove = hasPermission(me, 'schedule.approve');
-  const { facilityId } = useFacility();
+  const { facilityId, isAll } = useFacility();
   const now = new Date();
   const [date, setDate] = useState(
     `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -211,6 +211,7 @@ export default function RosterPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>氏名</TableHead>
+                    {isAll && <TableHead>店舗</TableHead>}
                     <TableHead>予定</TableHead>
                     <TableHead>打刻</TableHead>
                     <TableHead>状態</TableHead>
@@ -222,14 +223,14 @@ export default function RosterPage() {
                 <TableBody>
                   {isLoading && (
                     <TableRow>
-                      <TableCell colSpan={canEdit ? 7 : 6} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={(canEdit ? 7 : 6) + (isAll ? 1 : 0)} className="py-10 text-center text-muted-foreground">
                         読み込み中…
                       </TableCell>
                     </TableRow>
                   )}
                   {!isLoading && rows?.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={canEdit ? 7 : 6} className="py-10 text-center text-muted-foreground">
+                      <TableCell colSpan={(canEdit ? 7 : 6) + (isAll ? 1 : 0)} className="py-10 text-center text-muted-foreground">
                         この日の利用者はいません。
                       </TableCell>
                     </TableRow>
@@ -237,6 +238,11 @@ export default function RosterPage() {
                   {rows?.map((r) => (
                     <TableRow key={r.userId}>
                       <TableCell className="font-medium text-foreground">{r.name}</TableCell>
+                      {isAll && (
+                        <TableCell className="text-xs text-muted-foreground">
+                          {r.facilityName ?? '—'}
+                        </TableCell>
+                      )}
                       <TableCell className="text-xs text-muted-foreground">
                         <div className="font-mono">
                           {r.planIn ?? '—'}

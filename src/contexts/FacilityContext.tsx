@@ -9,15 +9,19 @@ import { useUsersFacilityOptions } from '../features/users/api';
 import type { FacilityOption } from '../features/staff/api';
 
 interface FacilityContextValue {
-  /** 現在ヘッダーで選択中の店舗ID（全ページ共通） */
+  /** 現在ヘッダーで選択中の店舗ID（全ページ共通）。'all'で全店舗。 */
   facilityId: string;
   setFacilityId: (id: string) => void;
   facilities: FacilityOption[];
+  /** 全店舗が選択されているか */
+  isAll: boolean;
 }
 
 const FacilityContext = createContext<FacilityContextValue | undefined>(undefined);
 
 const STORAGE_KEY = 'selectedFacilityId';
+/** 全店舗を表すセンチネル値。 */
+export const ALL_FACILITIES = 'all';
 
 export function FacilityProvider({ children }: { children: ReactNode }) {
   const { data: facilities } = useUsersFacilityOptions();
@@ -30,10 +34,14 @@ export function FacilityProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, id);
   };
 
-  // 未選択、または選択中IDがアクセス可能店舗に無い場合は先頭を選ぶ
+  // 未選択、または選択中IDがアクセス可能店舗に無い場合は先頭を選ぶ（'all'は許容）
   useEffect(() => {
     if (facilities && facilities.length > 0) {
-      if (!facilityId || !facilities.some((f) => f.id === facilityId)) {
+      if (
+        !facilityId ||
+        (facilityId !== ALL_FACILITIES &&
+          !facilities.some((f) => f.id === facilityId))
+      ) {
         setFacilityId(facilities[0].id);
       }
     }
@@ -42,7 +50,12 @@ export function FacilityProvider({ children }: { children: ReactNode }) {
 
   return (
     <FacilityContext.Provider
-      value={{ facilityId, setFacilityId, facilities: facilities ?? [] }}
+      value={{
+        facilityId,
+        setFacilityId,
+        facilities: facilities ?? [],
+        isAll: facilityId === ALL_FACILITIES,
+      }}
     >
       {children}
     </FacilityContext.Provider>

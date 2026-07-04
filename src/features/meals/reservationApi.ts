@@ -25,6 +25,7 @@ export interface Meal {
 
 export interface MealWithUser extends Meal {
   userName: string;
+  facilityName?: string | null;
 }
 
 // ---------- 利用者本人 ----------

@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFacility } from '../contexts/FacilityContext';
+import { SelectStorePrompt } from '../components/layout/SelectStorePrompt';
 import {
   useAttendanceSettings,
   useUpdateAttendanceSettings,
@@ -22,9 +23,9 @@ import { getApiErrorMessage } from '../lib/errors';
 export default function AttendanceSettingsPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
-  const { facilityId } = useFacility();
+  const { facilityId, isAll } = useFacility();
 
-  const { data: settings } = useAttendanceSettings(facilityId);
+  const { data: settings } = useAttendanceSettings(isAll ? '' : facilityId);
   const update = useUpdateAttendanceSettings();
 
   const [late, setLate] = useState('0');
@@ -49,6 +50,8 @@ export default function AttendanceSettingsPage() {
       toast.error(getApiErrorMessage(err));
     }
   };
+
+  if (isAll) return <SelectStorePrompt title="打刻設定" />;
 
   return (
     <div>

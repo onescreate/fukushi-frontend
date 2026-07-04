@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useFacility } from '../contexts/FacilityContext';
+import { SelectStorePrompt } from '../components/layout/SelectStorePrompt';
 import {
   useMealPricings,
   useDeleteMealPricing,
@@ -29,9 +30,9 @@ const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 export default function MealPricingPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'settings.price');
-  const { facilityId } = useFacility();
+  const { facilityId, isAll } = useFacility();
 
-  const { data: pricings, isLoading } = useMealPricings(facilityId);
+  const { data: pricings, isLoading } = useMealPricings(isAll ? '' : facilityId);
   const del = useDeleteMealPricing();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -57,6 +58,8 @@ export default function MealPricingPage() {
       toast.error(getApiErrorMessage(err));
     }
   };
+
+  if (isAll) return <SelectStorePrompt title="食事料金" />;
 
   return (
     <div>

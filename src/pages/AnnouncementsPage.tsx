@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useFacility } from '../contexts/FacilityContext';
+import { SelectStorePrompt } from '../components/layout/SelectStorePrompt';
 import {
   AUDIENCE_LABELS,
   useAnnouncements,
@@ -23,8 +24,8 @@ const audienceCls: Record<string, string> = {
 };
 
 export default function AnnouncementsPage() {
-  const { facilityId } = useFacility();
-  const { data: items, isLoading } = useAnnouncements(facilityId);
+  const { facilityId, isAll } = useFacility();
+  const { data: items, isLoading } = useAnnouncements(isAll ? '' : facilityId);
   const del = useDeleteAnnouncement();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -41,6 +42,8 @@ export default function AnnouncementsPage() {
       toast.error(getApiErrorMessage(err));
     }
   };
+
+  if (isAll) return <SelectStorePrompt title="お知らせ" />;
 
   return (
     <div>

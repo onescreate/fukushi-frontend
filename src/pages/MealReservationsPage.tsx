@@ -40,7 +40,7 @@ function approvalBadge(m: MealWithUser) {
 export default function MealReservationsPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'meal.manage');
-  const { facilityId } = useFacility();
+  const { facilityId, isAll } = useFacility();
   const { data: allUsers } = useUsersList();
 
   const now = new Date();
@@ -93,7 +93,7 @@ export default function MealReservationsPage() {
           </Button>
         </div>
 
-        {facilityId && canManage && (
+        {facilityId && !isAll && canManage && (
           <Button
             className="ml-auto"
             onClick={() => {
@@ -114,6 +114,7 @@ export default function MealReservationsPage() {
               <TableRow>
                 <TableHead>利用日</TableHead>
                 <TableHead>利用者</TableHead>
+                {isAll && <TableHead>店舗</TableHead>}
                 <TableHead>状態</TableHead>
                 <TableHead>承認</TableHead>
                 <TableHead className="text-right">金額</TableHead>
@@ -122,13 +123,13 @@ export default function MealReservationsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isAll ? 6 : 5} className="py-10 text-center text-muted-foreground">
                     読み込み中…
                   </TableCell>
                 </TableRow>
               ) : (meals ?? []).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isAll ? 6 : 5} className="py-10 text-center text-muted-foreground">
                     この月の食事予約はありません。
                   </TableCell>
                 </TableRow>
@@ -138,9 +139,9 @@ export default function MealReservationsPage() {
                   return (
                     <TableRow
                       key={m.id}
-                      className={canManage ? 'cursor-pointer' : ''}
+                      className={canManage && !isAll ? 'cursor-pointer' : ''}
                       onClick={
-                        canManage
+                        canManage && !isAll
                           ? () => {
                               setEditing(m);
                               setDialogOpen(true);
@@ -150,6 +151,11 @@ export default function MealReservationsPage() {
                     >
                       <TableCell>{formatDate(m.mealDate)}</TableCell>
                       <TableCell className="font-medium text-foreground">{m.userName}</TableCell>
+                      {isAll && (
+                        <TableCell className="text-xs text-muted-foreground">
+                          {m.facilityName ?? '—'}
+                        </TableCell>
+                      )}
                       <TableCell>{MEAL_STATUS_LABELS[m.status]}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.cls}`}>

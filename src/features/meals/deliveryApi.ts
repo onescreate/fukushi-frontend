@@ -10,6 +10,7 @@ export interface DeliveryDay {
 export interface DeliveryMonthly {
   year: number;
   month: number;
+  allMode?: boolean;
   days: Record<string, DeliveryDay>;
   unentered: string[];
   mismatch: { date: string; orderCount: number; deliveryCount: number }[];

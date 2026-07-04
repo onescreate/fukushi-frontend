@@ -26,6 +26,7 @@ export interface RosterBreak {
 export interface RosterRow {
   userId: string;
   name: string;
+  facilityName: string | null;
   planIn: string | null;
   planOut: string | null;
   scheduleStatus: 'pending' | 'approved' | 'rejected' | null;

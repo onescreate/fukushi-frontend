@@ -12,6 +12,7 @@ export interface BillingRow {
   taxAmount: number; // 内消費税額
   subtotal: number; // 税抜
   taxRate: number | null;
+  facilityName?: string | null;
   paymentDate: string | null;
   note: string | null;
 }
@@ -22,6 +23,7 @@ export interface BillingList {
   taxRate: number | null;
   closed: boolean;
   closedAt: string | null;
+  allMode?: boolean;
   rows: BillingRow[];
 }
 

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { useFacility } from '../contexts/FacilityContext';
+import { SelectStorePrompt } from '../components/layout/SelectStorePrompt';
 import {
   useInvoiceSettings,
   useDeleteInvoiceSetting,
@@ -24,8 +25,8 @@ import { formatDate } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
 export default function InvoiceSettingsPage() {
-  const { facilityId } = useFacility();
-  const { data: settings, isLoading } = useInvoiceSettings(facilityId);
+  const { facilityId, isAll } = useFacility();
+  const { data: settings, isLoading } = useInvoiceSettings(isAll ? '' : facilityId);
   const del = useDeleteInvoiceSetting();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -42,6 +43,8 @@ export default function InvoiceSettingsPage() {
       toast.error(getApiErrorMessage(err));
     }
   };
+
+  if (isAll) return <SelectStorePrompt title="請求書 発行者情報" />;
 
   return (
     <div>
