@@ -35,6 +35,7 @@ export function MealPricingFormDialog({
 
   const [effectiveDate, setEffectiveDate] = useState('');
   const [mealFee, setMealFee] = useState('0');
+  const [specialMealFee, setSpecialMealFee] = useState('0');
   const [cancelFee, setCancelFee] = useState('0');
   const [error, setError] = useState('');
 
@@ -42,6 +43,7 @@ export function MealPricingFormDialog({
     if (open) {
       setEffectiveDate(target?.effectiveDate ?? '');
       setMealFee(String(target?.mealFee ?? 0));
+      setSpecialMealFee(String(target?.specialMealFee ?? 0));
       setCancelFee(String(target?.cancelFee ?? 0));
       setError('');
     }
@@ -55,6 +57,7 @@ export function MealPricingFormDialog({
     const data = {
       effectiveDate,
       mealFee: Number(mealFee) || 0,
+      specialMealFee: Number(specialMealFee) || 0,
       cancelFee: Number(cancelFee) || 0,
     };
     try {
@@ -103,7 +106,7 @@ export function MealPricingFormDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="mp-meal">食事料金（円・税込）</Label>
+            <Label htmlFor="mp-meal">通常食事料金（円・税込）</Label>
             <Input
               id="mp-meal"
               type="number"
@@ -113,6 +116,22 @@ export function MealPricingFormDialog({
               required
               className="max-w-40"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="mp-special">特別食事料金(円・税込）</Label>
+            <Input
+              id="mp-special"
+              type="number"
+              min={0}
+              value={specialMealFee}
+              onChange={(e) => setSpecialMealFee(e.target.value)}
+              required
+              className="max-w-40"
+            />
+            <p className="text-xs text-muted-foreground">
+              補助がない等で「特別料金」に設定した利用者に適用します。
+            </p>
           </div>
 
           <div className="space-y-1.5">

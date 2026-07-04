@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { BillingDetailDialog } from '../features/meals/BillingDetailDialog';
 import { useUsersFacilityOptions } from '../features/users/api';
 import {
   useMealBilling,
@@ -67,6 +68,7 @@ export default function MealBillingPage() {
   const [revertTarget, setRevertTarget] = useState<BillingRow | null>(null);
   const [noteTarget, setNoteTarget] = useState<BillingRow | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [detailTarget, setDetailTarget] = useState<BillingRow | null>(null);
 
   const totals = useMemo(() => {
     const rows = data?.rows ?? [];
@@ -203,7 +205,11 @@ export default function MealBillingPage() {
                 </TableRow>
               ) : (
                 (data?.rows ?? []).map((r) => (
-                  <TableRow key={r.userId}>
+                  <TableRow
+                    key={r.userId}
+                    className="cursor-pointer"
+                    onClick={() => setDetailTarget(r)}
+                  >
                     <TableCell className="font-medium text-foreground">
                       {r.userName}
                       {r.note && (
@@ -224,7 +230,10 @@ export default function MealBillingPage() {
                         <button
                           type="button"
                           disabled={!canPay}
-                          onClick={() => canPay && setRevertTarget(r)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canPay) setRevertTarget(r);
+                          }}
                           className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 disabled:cursor-default"
                         >
                           入金済 {formatDate(r.paymentDate)}
@@ -233,7 +242,10 @@ export default function MealBillingPage() {
                         <button
                           type="button"
                           disabled={!canPay}
-                          onClick={() => canPay && openPay(r)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canPay) openPay(r);
+                          }}
                           className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-medium text-rose-700 disabled:cursor-default"
                         >
                           未入金
@@ -242,7 +254,15 @@ export default function MealBillingPage() {
                     </TableCell>
                     {canPay && (
                       <TableCell>
-                        <Button variant="ghost" size="icon-sm" onClick={() => openNote(r)} title="メモ">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openNote(r);
+                          }}
+                          title="メモ"
+                        >
                           <Pencil className="size-4" />
                         </Button>
                       </TableCell>
@@ -306,6 +326,15 @@ export default function MealBillingPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BillingDetailDialog
+        open={!!detailTarget}
+        onOpenChange={(o) => !o && setDetailTarget(null)}
+        userId={detailTarget?.userId ?? null}
+        userName={detailTarget?.userName ?? ''}
+        year={year}
+        month={month}
+      />
 
       <ConfirmDialog
         open={!!revertTarget}

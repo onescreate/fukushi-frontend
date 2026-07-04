@@ -35,6 +35,29 @@ export function useMealBilling(facilityId: string, year: number, month: number) 
   });
 }
 
+export interface BillingDetailItem {
+  mealDate: string; // YYYY-MM-DD
+  status: 'reserved' | 'eaten' | 'cancelled';
+  amount: number;
+}
+
+export function useBillingDetail(
+  userId: string | null,
+  year: number,
+  month: number,
+) {
+  return useQuery<BillingDetailItem[]>({
+    queryKey: ['meal-billing', 'detail', userId, year, month],
+    queryFn: async () =>
+      (
+        await apiClient.get<BillingDetailItem[]>('/meal-billing/detail', {
+          params: { userId, year, month },
+        })
+      ).data,
+    enabled: !!userId,
+  });
+}
+
 export function useSetPayment() {
   const qc = useQueryClient();
   return useMutation({

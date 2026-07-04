@@ -108,7 +108,8 @@ export default function MealPricingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>適用開始日</TableHead>
-                <TableHead className="text-right">食事料金</TableHead>
+                <TableHead className="text-right">通常料金</TableHead>
+                <TableHead className="text-right">特別料金</TableHead>
                 <TableHead className="text-right">キャンセル料</TableHead>
                 <TableHead>状態</TableHead>
                 {canManage && <TableHead className="w-24 text-right">操作</TableHead>}
@@ -118,7 +119,7 @@ export default function MealPricingPage() {
               {isLoading ? (
                 <TableRow>
                   <TableCell
-                    colSpan={canManage ? 5 : 4}
+                    colSpan={canManage ? 6 : 5}
                     className="py-10 text-center text-muted-foreground"
                   >
                     読み込み中…
@@ -127,7 +128,7 @@ export default function MealPricingPage() {
               ) : (pricings ?? []).length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={canManage ? 5 : 4}
+                    colSpan={canManage ? 6 : 5}
                     className="py-10 text-center text-muted-foreground"
                   >
                     料金がまだ登録されていません。
@@ -139,6 +140,9 @@ export default function MealPricingPage() {
                     <TableCell>{formatDate(row.effectiveDate)}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {yen(row.mealFee)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {yen(row.specialMealFee)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {yen(row.cancelFee)}

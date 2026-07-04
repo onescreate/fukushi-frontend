@@ -6,6 +6,7 @@ export interface MealPricing {
   facilityId: string;
   effectiveDate: string; // YYYY-MM-DD
   mealFee: number;
+  specialMealFee: number;
   cancelFee: number;
   isCurrent: boolean;
 }
@@ -13,6 +14,7 @@ export interface MealPricing {
 export interface MealPricingInput {
   effectiveDate: string;
   mealFee: number;
+  specialMealFee: number;
   cancelFee: number;
 }
 

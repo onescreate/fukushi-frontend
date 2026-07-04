@@ -12,7 +12,6 @@ export interface AppUser {
   kana: string | null;
   certNumber: string | null;
   useSpecialMealFee: boolean;
-  specialMealFee: number;
   heightCm: string | null;
   status: 'active' | 'withdrawn';
   createdAt: string;
@@ -29,7 +28,6 @@ export interface CreateUserInput {
   facilityId: string;
   certNumber?: string;
   useSpecialMealFee?: boolean;
-  specialMealFee?: number;
   heightCm?: number;
   status?: 'active' | 'withdrawn';
 }

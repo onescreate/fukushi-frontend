@@ -49,7 +49,6 @@ export function UserFormDialog({
   const [facilityId, setFacilityId] = useState('');
   const [certNumber, setCertNumber] = useState('');
   const [useSpecialMealFee, setUseSpecialMealFee] = useState(false);
-  const [specialMealFee, setSpecialMealFee] = useState('');
   const [heightCm, setHeightCm] = useState('');
   const [status, setStatus] = useState<'active' | 'withdrawn'>('active');
   const [error, setError] = useState('');
@@ -65,9 +64,6 @@ export function UserFormDialog({
       setFacilityId(target?.facilityId ?? '');
       setCertNumber(target?.certNumber ?? '');
       setUseSpecialMealFee(target?.useSpecialMealFee ?? false);
-      setSpecialMealFee(
-        target?.specialMealFee != null ? String(target.specialMealFee) : '',
-      );
       setHeightCm(target?.heightCm ?? '');
       setStatus(target?.status ?? 'active');
       setError('');
@@ -86,7 +82,6 @@ export function UserFormDialog({
       facilityId,
       certNumber: certNumber || undefined,
       useSpecialMealFee,
-      specialMealFee: useSpecialMealFee ? Number(specialMealFee) || 0 : 0,
       heightCm: heightCm ? Number(heightCm) : undefined,
       status,
     };
@@ -266,26 +261,11 @@ export function UserFormDialog({
                 </button>
               ))}
             </div>
-            {useSpecialMealFee ? (
-              <div className="pt-1">
-                <Input
-                  id="u-fee"
-                  type="number"
-                  min={0}
-                  value={specialMealFee}
-                  onChange={(e) => setSpecialMealFee(e.target.value)}
-                  placeholder="0"
-                  className="max-w-40"
-                />
-                <p className="pt-1 text-xs text-muted-foreground">
-                  この利用者に適用する食事料金（税込・円）。補助がなく個別料金の場合に設定します。
-                </p>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                店舗の食事料金を適用します。個別料金の利用者のみ「特別料金」を選択してください。
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              {useSpecialMealFee
+                ? '店舗の「特別食事料金」を適用します（金額は食事料金設定で管理）。'
+                : '店舗の「通常食事料金」を適用します。補助がない等で特別料金の利用者のみ「特別料金」を選択してください。'}
+            </p>
           </div>
 
           {isEdit && (
