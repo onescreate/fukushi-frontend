@@ -13,8 +13,12 @@ const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 /** 日付セルに表示する食事の状態ラベル。 */
 function mealBadge(meal: Meal | undefined) {
   if (!meal) return null;
+  // キャンセル申請中は approvalStatus=approved のまま requestType=cancel で表す
+  if (meal.requestType === 'cancel') {
+    return { text: '取消申請中', cls: 'bg-amber-100 text-amber-700' };
+  }
   if (meal.approvalStatus === 'pending') {
-    return { text: meal.requestType === 'cancel' ? '取消申請中' : '予約申請中', cls: 'bg-amber-100 text-amber-700' };
+    return { text: '予約申請中', cls: 'bg-amber-100 text-amber-700' };
   }
   if (meal.status === 'reserved') return { text: '予約済', cls: 'bg-orange-100 text-orange-700' };
   if (meal.status === 'eaten') return { text: '喫食済', cls: 'bg-orange-100 text-orange-700' };

@@ -32,8 +32,12 @@ const pad = (n: number) => String(n).padStart(2, '0');
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 function approvalBadge(m: MealWithUser) {
+  // キャンセル申請中は approvalStatus=approved のまま requestType=cancel で表す
+  if (m.requestType === 'cancel') {
+    return { text: '取消申請中', cls: 'bg-amber-100 text-amber-700' };
+  }
   if (m.approvalStatus === 'pending') {
-    return { text: m.requestType === 'cancel' ? '取消申請中' : '予約申請中', cls: 'bg-amber-100 text-amber-700' };
+    return { text: '予約申請中', cls: 'bg-amber-100 text-amber-700' };
   }
   if (m.approvalStatus === 'rejected') return { text: '却下', cls: 'bg-slate-100 text-slate-500' };
   return { text: '承認済', cls: 'bg-emerald-100 text-emerald-700' };

@@ -121,14 +121,14 @@ export default function RosterPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={canEdit ? 7 : 6} className="py-10 text-center text-muted-foreground">
                     読み込み中…
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && rows?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={canEdit ? 7 : 6} className="py-10 text-center text-muted-foreground">
                     この日の利用者はいません。
                   </TableCell>
                 </TableRow>

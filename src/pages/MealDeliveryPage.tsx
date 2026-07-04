@@ -75,7 +75,7 @@ export default function MealDeliveryPage() {
         facilityId,
         date: editDate,
         deliveryCount: Number(countInput) || 0,
-        note: noteInput || undefined,
+        note: noteInput,
       });
       toast.success('納品数を保存しました');
       setEditDate(null);

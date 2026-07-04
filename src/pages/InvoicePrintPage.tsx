@@ -120,12 +120,28 @@ export default function InvoicePrintPage() {
   const month = Number(params.get('month'));
   const userId = params.get('userId'); // 個別発行のとき
 
-  const { data, isLoading } = useMealBilling(facilityId, year, month);
+  // Firebase の認証復元が終わるまではデータ取得を待つ（新規タブで初回401になるのを防ぐ）
+  const authReady = !!firebaseUser;
+  const { data, isLoading } = useMealBilling(
+    authReady ? facilityId : '',
+    year,
+    month,
+  );
   const lastDay = new Date(year, month, 0).getDate();
   const monthEnd = `${year}-${pad(month)}-${pad(lastDay)}`;
-  const { data: issuer } = useActiveInvoiceSetting(facilityId, monthEnd);
+  const { data: issuer } = useActiveInvoiceSetting(
+    authReady ? facilityId : '',
+    monthEnd,
+  );
 
-  if (!loading && !firebaseUser) return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        読み込み中…
+      </div>
+    );
+  }
+  if (!firebaseUser) return <Navigate to="/login" replace />;
 
   const rows = (data?.rows ?? []).filter((r) => !userId || r.userId === userId);
 

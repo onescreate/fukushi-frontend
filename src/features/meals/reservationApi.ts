@@ -87,6 +87,7 @@ export function useAdminMealUpsert() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meal-reservations'] });
       qc.invalidateQueries({ queryKey: ['meal-pending'] });
+      qc.invalidateQueries({ queryKey: ['roster'] });
     },
   });
 }
@@ -129,6 +130,7 @@ export function useDecideMeal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meal-pending'] });
       qc.invalidateQueries({ queryKey: ['meal-reservations'] });
+      qc.invalidateQueries({ queryKey: ['roster'] });
     },
   });
 }
