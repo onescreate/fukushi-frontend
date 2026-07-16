@@ -1,3 +1,4 @@
+import { pad, yen } from '@/lib/format';
 import { useMemo } from 'react';
 import {
   Dialog,
@@ -8,9 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { useBillingDetail, type BillingDetailItem } from './billingApi';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 function dayStyle(item: BillingDetailItem | undefined) {
   if (!item) return { cls: '', label: '' };

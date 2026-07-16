@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import {
@@ -23,7 +24,6 @@ import {
 const textareaCls =
   'w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

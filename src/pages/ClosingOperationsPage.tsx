@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useState } from 'react';
 import { Printer } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,7 +23,6 @@ import {
 } from '../features/closing/api';
 import { getApiErrorMessage } from '../lib/errors';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const FLAGS: { key: ClosingFlag; label: string }[] = [
   { key: 'regionalCooperation', label: '地域連携会議' },
   { key: 'transitionPrep', label: '移行準備支援' },

@@ -16,10 +16,9 @@ import {
 } from '@/components/ui/dialog';
 import { useFacility } from '../contexts/FacilityContext';
 import { useMealDeliveries, useSetDelivery } from '../features/meals/deliveryApi';
-import { formatDate } from '../lib/format';
+import { formatDate, pad } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function MealDeliveryPage() {

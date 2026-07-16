@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { getApiErrorMessage } from '../lib/errors';
@@ -24,7 +25,6 @@ const REASON_LABEL: Record<ReasonKind, string> = {
 
 type Stage = 'loading' | 'setup' | 'select' | 'pin' | 'clock' | 'result';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEKDAY = ['日', '月', '火', '水', '木', '金', '土'];
 
 /** 共通の白カード（画面全体をラップ）。再マウントを避けるためモジュール直下に定義。 */

@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import {
@@ -14,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { getApiErrorMessage } from '../../lib/errors';
 import { useBulkSchedule } from './api';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 
 export function BulkScheduleDialog({
   open,

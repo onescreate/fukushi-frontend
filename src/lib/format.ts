@@ -15,3 +15,9 @@ export function formatAddress(e: {
   const zip = e.postalCode ? `〒${e.postalCode} ` : '';
   return (zip + body).trim();
 }
+
+/** 2桁ゼロ埋め（月日・時刻の整形用） */
+export const pad = (n: number): string => String(n).padStart(2, '0');
+
+/** 円表示（¥1,234） */
+export const yen = (n: number): string => `¥${n.toLocaleString('ja-JP')}`;

@@ -1,10 +1,10 @@
+import { pad } from '@/lib/format';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useMyAttendance } from '../../features/attendance/myApi';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 
 export default function PersonalHistoryPage() {
   const now = new Date();

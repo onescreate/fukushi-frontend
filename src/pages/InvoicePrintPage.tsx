@@ -1,11 +1,10 @@
+import { pad, yen } from '@/lib/format';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { Printer, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMealBilling, type BillingRow } from '../features/meals/billingApi';
 import { useActiveInvoiceSetting } from '../features/meals/invoiceApi';
 
-const pad = (n: number) => String(n).padStart(2, '0');
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 function Invoice({
   row,

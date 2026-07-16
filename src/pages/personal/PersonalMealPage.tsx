@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
@@ -7,7 +8,6 @@ import { useMySchedules } from '../../features/schedules/myApi';
 import { useMyMeals, useMySubmitMeal, type Meal } from '../../features/meals/reservationApi';
 import { getApiErrorMessage } from '../../lib/errors';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 /** 日付セルに表示する食事の状態ラベル。 */

@@ -20,10 +20,8 @@ import {
 } from '../features/meals/reservationApi';
 import { MealAdminDialog } from '../features/meals/MealAdminDialog';
 import { hasPermission, useMe } from '../features/auth/useMe';
-import { formatDate } from '../lib/format';
+import { formatDate, pad, yen } from '../lib/format';
 
-const pad = (n: number) => String(n).padStart(2, '0');
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 function approvalBadge(m: MealWithUser) {
   // キャンセル申請中は approvalStatus=approved のまま requestType=cancel で表す

@@ -22,10 +22,9 @@ import {
 } from '../features/meals/api';
 import { MealPricingFormDialog } from '../features/meals/MealPricingFormDialog';
 import { hasPermission, useMe } from '../features/auth/useMe';
-import { formatDate } from '../lib/format';
+import { formatDate, yen } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 export default function MealPricingPage() {
   const { data: me } = useMe();

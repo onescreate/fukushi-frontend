@@ -29,10 +29,9 @@ import {
   useUpsertHealthRecord,
   type HealthRow,
 } from '../features/health/api';
-import { formatDate } from '../lib/format';
+import { formatDate, pad } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;

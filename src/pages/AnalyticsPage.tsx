@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button';
 import { useFacility } from '../contexts/FacilityContext';
 import { useFacilityStats } from '../features/stats/api';
 import { useStaffAnnouncements } from '../features/announcements/api';
-import { formatDate } from '../lib/format';
+import { formatDate, yen } from '../lib/format';
 
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 function Tile({
   label,

@@ -23,9 +23,8 @@ import {
 } from '../features/schedules/approvalApi';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
 import { getApiErrorMessage } from '../lib/errors';
-import { formatDate } from '../lib/format';
+import { formatDate, pad } from '../lib/format';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 
 function StatusBadge({ row }: { row: RosterRow }) {
   const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';

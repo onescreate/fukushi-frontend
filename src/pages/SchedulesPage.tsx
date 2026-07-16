@@ -1,3 +1,4 @@
+import { pad } from '@/lib/format';
 import { useMemo, useState } from 'react';
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -18,7 +19,6 @@ import {
 import { ScheduleDayDialog } from '../features/schedules/ScheduleDayDialog';
 import { BulkScheduleDialog } from '../features/schedules/BulkScheduleDialog';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function SchedulesPage() {

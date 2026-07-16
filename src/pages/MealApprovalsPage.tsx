@@ -16,9 +16,8 @@ import {
   usePendingMeals,
 } from '../features/meals/reservationApi';
 import { getApiErrorMessage } from '../lib/errors';
-import { formatDate } from '../lib/format';
+import { formatDate, yen } from '../lib/format';
 
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
 
 export default function MealApprovalsPage() {
   const { data, isLoading } = usePendingMeals();

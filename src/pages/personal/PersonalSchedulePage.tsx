@@ -5,10 +5,9 @@ import { Card } from '@/components/ui/card';
 import { useMySchedules } from '../../features/schedules/myApi';
 import type { Schedule } from '../../features/schedules/api';
 import { useMyAnnouncements } from '../../features/announcements/api';
-import { formatDate } from '../../lib/format';
+import { formatDate, pad } from '../../lib/format';
 import { PersonalSubmitDialog } from './PersonalSubmitDialog';
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function PersonalSchedulePage() {
