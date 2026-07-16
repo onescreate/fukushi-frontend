@@ -62,7 +62,7 @@ function Invoice({
         </thead>
         <tbody>
           <tr>
-            <td className="border border-slate-300 px-3 py-2">食事代 ※軽減税率(8%)対象</td>
+            <td className="border border-slate-300 px-3 py-2">食事代 ※軽減税率({row.taxRate ?? 8}%)対象</td>
             <td className="border border-slate-300 px-3 py-2 text-center">{row.mealCount}食</td>
             <td className="border border-slate-300 px-3 py-2 text-right tabular-nums">{yen(row.mealTotal)}</td>
           </tr>
@@ -75,7 +75,7 @@ function Invoice({
           )}
           <tr>
             <td className="border border-slate-300 bg-slate-50 px-3 py-2 text-right font-medium" colSpan={2}>
-              8%対象 小計（税抜）
+              {row.taxRate ?? 8}%対象 小計（税抜）
             </td>
             <td className="border border-slate-300 px-3 py-2 text-right tabular-nums">{yen(row.subtotal)}</td>
           </tr>
