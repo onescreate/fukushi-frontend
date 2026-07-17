@@ -1,12 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 
-export type ServiceType =
-  | 'transition'
-  | 'continuous_a'
-  | 'continuous_b'
-  | 'other';
-
 export interface PortalShop {
   shopId: string;
   name: string;
@@ -16,7 +10,7 @@ export interface PortalShop {
   status: string | null;
   designated: boolean;
   facilityId: string | null;
-  serviceType: ServiceType | null;
+  serviceType: string | null;
   mealsEnabled: boolean;
 }
 
@@ -38,7 +32,7 @@ export function useDesignateShop() {
   return useMutation({
     mutationFn: (v: {
       shopId: string;
-      serviceType?: ServiceType | null;
+      serviceType?: string | null;
       mealsEnabled?: boolean;
     }) =>
       apiClient.post(`/portal/shops/${v.shopId}/designate`, {
@@ -47,7 +41,6 @@ export function useDesignateShop() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['portal', 'shops'] });
-      // 店舗選択肢など、店舗に依存するものを広く更新
       qc.invalidateQueries({ queryKey: ['users', 'facility-options'] });
     },
   });
@@ -64,10 +57,3 @@ export function useUndesignateShop() {
     },
   });
 }
-
-export const SERVICE_TYPE_LABELS: Record<ServiceType, string> = {
-  transition: '就労移行支援',
-  continuous_a: '就労継続支援A型',
-  continuous_b: '就労継続支援B型',
-  other: 'その他',
-};
