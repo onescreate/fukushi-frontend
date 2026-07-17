@@ -88,8 +88,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        title={`ようこそ、${me?.name ?? ''} さん`}
-        description={`${year}年${month}月の状況`}
+        title="ダッシュボード"
+        description={`ようこそ、${me?.name ?? ''} さん — ${year}年${month}月の状況`}
       />
 
       {/* 要対応インボックス */}
