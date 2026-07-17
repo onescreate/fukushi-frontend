@@ -49,39 +49,39 @@
 }
 
 :root {
-    /* 基調: インディゴ系（SaaS風）。ニュートラルはわずかに寒色寄りのグレー */
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.21 0.02 270);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.21 0.02 270);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.21 0.02 270);
-    --primary: oklch(0.511 0.231 277);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.968 0.007 270);
-    --secondary-foreground: oklch(0.3 0.03 275);
-    --muted: oklch(0.972 0.006 270);
-    --muted-foreground: oklch(0.55 0.02 270);
-    --accent: oklch(0.962 0.018 272);
-    --accent-foreground: oklch(0.457 0.226 277);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.923 0.006 270);
-    --input: oklch(0.923 0.006 270);
-    --ring: oklch(0.511 0.231 277);
-    --chart-1: oklch(0.511 0.231 277);
-    --chart-2: oklch(0.62 0.19 260);
-    --chart-3: oklch(0.7 0.15 300);
-    --chart-4: oklch(0.65 0.17 230);
-    --chart-5: oklch(0.55 0.2 320);
-    --radius: 0.375rem;
-    --sidebar: oklch(0.99 0.003 270);
-    --sidebar-foreground: oklch(0.21 0.02 270);
-    --sidebar-primary: oklch(0.511 0.231 277);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.962 0.018 272);
-    --sidebar-accent-foreground: oklch(0.457 0.226 277);
-    --sidebar-border: oklch(0.923 0.006 270);
-    --sidebar-ring: oklch(0.511 0.231 277);
+    /* KGI管理踏襲: 白本体・インディゴ(#4F46E5)アクセント・スレート系テキスト・#ECEDF1ボーダー */
+    --background: #FBFBFC;
+    --foreground: #1E293B;        /* slate-800 見出し */
+    --card: #FFFFFF;
+    --card-foreground: #1E293B;
+    --popover: #FFFFFF;
+    --popover-foreground: #1E293B;
+    --primary: #4F46E5;           /* KGIインディゴ */
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F5F9;         /* slate-100 */
+    --secondary-foreground: #334155; /* slate-700 */
+    --muted: #F8FAFC;             /* slate-50 */
+    --muted-foreground: #64748B;  /* slate-500 */
+    --accent: #EEF2FF;            /* indigo-50 */
+    --accent-foreground: #4338CA; /* indigo-700 */
+    --destructive: #E11D48;       /* rose-600 */
+    --border: #ECEDF1;            /* KGIカードボーダー */
+    --input: #E3E4EA;             /* KGI入力ボーダー */
+    --ring: #4F46E5;
+    --chart-1: #4F46E5;
+    --chart-2: #10B981;
+    --chart-3: #8B5CF6;
+    --chart-4: #0EA5E9;
+    --chart-5: #F59E0B;
+    --radius: 0.5rem;
+    --sidebar: #14141C;
+    --sidebar-foreground: #EDEDF2;
+    --sidebar-primary: #6366F1;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: rgba(99,102,241,0.15);
+    --sidebar-accent-foreground: #FFFFFF;
+    --sidebar-border: rgba(255,255,255,0.06);
+    --sidebar-ring: #6366F1;
 }
 
 .dark {
