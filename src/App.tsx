@@ -7,6 +7,7 @@ import PersonalProtected from './components/auth/PersonalProtected';
 import PersonalSchedulePage from './pages/personal/PersonalSchedulePage';
 import PersonalMealPage from './pages/personal/PersonalMealPage';
 import PersonalHistoryPage from './pages/personal/PersonalHistoryPage';
+import PersonalHealthPage from './pages/personal/PersonalHealthPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -49,6 +50,7 @@ export default function App() {
       <Route path="/my" element={<PersonalProtected />}>
         <Route index element={<PersonalSchedulePage />} />
         <Route path="meals" element={<PersonalMealPage />} />
+        <Route path="health" element={<PersonalHealthPage />} />
         <Route path="history" element={<PersonalHistoryPage />} />
       </Route>
 

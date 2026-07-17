@@ -7,6 +7,7 @@ import {
   kioskAuthenticate,
   kioskBoard,
   kioskClock,
+  kioskHealth,
   kioskMeal,
   kioskSubmitReason,
   kioskToken,
@@ -49,6 +50,7 @@ export default function KioskPage() {
   const [operationToken, setOperationToken] = useState('');
   const [today, setToday] = useState<TodayStatus | null>(null);
   const [board, setBoard] = useState<KioskBoard | null>(null);
+  const [kioskWeight, setKioskWeight] = useState('');
   const [reasonItem, setReasonItem] = useState<{
     date: string;
     kind: ReasonKind;
@@ -189,6 +191,26 @@ export default function KioskPage() {
       toast.success(eaten ? '食事の喫食を記録しました' : '喫食を取り消しました');
     } catch (err) {
       toast.error(getApiErrorMessage(err, '食事の記録に失敗しました'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doHealth = async () => {
+    const val = Number(kioskWeight);
+    if (!(val > 0)) {
+      toast.error('体重を入力してください');
+      return;
+    }
+    setBusy(true);
+    try {
+      await kioskHealth(operationToken, val);
+      setKioskWeight('');
+      const b = await kioskBoard(operationToken);
+      setBoard(b);
+      toast.success('体重を記録しました');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, '体重の記録に失敗しました'));
     } finally {
       setBusy(false);
     }
@@ -369,6 +391,32 @@ export default function KioskPage() {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {board?.needsHealthInput && (
+          <div className="mb-5 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-4">
+            <p className="text-sm font-bold text-indigo-800">
+              今月の体重を入力してください（月1回）
+            </p>
+            <div className="mt-3 flex items-stretch gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                step="0.1"
+                value={kioskWeight}
+                onChange={(e) => setKioskWeight(e.target.value)}
+                placeholder="体重 (kg)"
+                className="flex-1 rounded-lg border border-indigo-200 bg-white px-3 py-2.5 text-base font-bold text-slate-800 outline-none focus:border-indigo-400"
+              />
+              <button
+                onClick={doHealth}
+                disabled={busy || !kioskWeight}
+                className="rounded-lg bg-indigo-600 px-5 text-sm font-bold text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+              >
+                記録
+              </button>
+            </div>
           </div>
         )}
 

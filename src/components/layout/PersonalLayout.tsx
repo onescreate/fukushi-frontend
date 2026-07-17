@@ -10,6 +10,7 @@ export default function PersonalLayout() {
   const tabs = [
     { to: '/my', label: '予定', end: true },
     ...(me?.mealsEnabled ? [{ to: '/my/meals', label: '食事', end: false }] : []),
+    { to: '/my/health', label: '健康', end: false },
     { to: '/my/history', label: '履歴', end: false },
   ];
 

@@ -61,10 +61,20 @@ export interface KioskBoard {
     rejected: { date: string }[];
     reasonNeeded: { date: string; kind: ReasonKind }[];
   };
+  /** 当月の体重が未入力なら true（打刻画面で入力を促す） */
+  needsHealthInput?: boolean;
 }
 
 export async function kioskBoard(operationToken: string): Promise<KioskBoard> {
   return (await apiClient.post('/kiosk/board', { operationToken })).data;
+}
+
+export async function kioskHealth(
+  operationToken: string,
+  weightKg: number,
+): Promise<{ ok: boolean }> {
+  return (await apiClient.post('/kiosk/health', { operationToken, weightKg }))
+    .data;
 }
 
 export async function kioskMeal(
