@@ -6,9 +6,6 @@ import type { NavItem } from '../app/nav';
 
 const DESCRIPTIONS: Record<string, string> = {
   '/users': '利用者の登録・アカウント発行（PIN／自宅ログイン）',
-  '/staff': '職員の登録・権限設定・アカウント発行',
-  '/facilities': '店舗（施設）の登録・編集',
-  '/corporations': '法人の登録・編集',
   '/devices': '打刻用タブレット端末の登録・削除',
   '/attendance-settings': '遅刻・早退判定の猶予時間（店舗ごと）',
   '/meal-pricing': '食事料金・キャンセル料（店舗ごと・適用開始日つき）',

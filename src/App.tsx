@@ -26,9 +26,6 @@ import MealDeliveryPage from './pages/MealDeliveryPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import HealthRecordsPage from './pages/HealthRecordsPage';
 import ClosingOperationsPage from './pages/ClosingOperationsPage';
-import CorporationsPage from './pages/masters/CorporationsPage';
-import FacilitiesPage from './pages/masters/FacilitiesPage';
-import StaffPage from './pages/masters/StaffPage';
 import UsersPage from './pages/masters/UsersPage';
 import DevicesPage from './pages/masters/DevicesPage';
 import { HubPage } from './pages/HubPage';
@@ -61,7 +58,7 @@ export default function App() {
           element={
             <HubPage
               title="マスタ管理"
-              description="利用者・職員・店舗・法人・端末の登録と管理"
+              description="事業所の設定・利用者・端末の管理（法人/店舗/職員は会計で管理）"
               items={MASTERS_HUB.children ?? []}
             />
           }
@@ -89,30 +86,6 @@ export default function App() {
           element={
             <RequirePerm perm="attendance.view">
               <AnalyticsPage />
-            </RequirePerm>
-          }
-        />
-        <Route
-          path="/corporations"
-          element={
-            <RequirePerm perm="corporation.manage">
-              <CorporationsPage />
-            </RequirePerm>
-          }
-        />
-        <Route
-          path="/facilities"
-          element={
-            <RequirePerm perm="store.manage">
-              <FacilitiesPage />
-            </RequirePerm>
-          }
-        />
-        <Route
-          path="/staff"
-          element={
-            <RequirePerm perm="staff.manage">
-              <StaffPage />
             </RequirePerm>
           }
         />
