@@ -2,6 +2,8 @@ import {
   Activity,
   BarChart3,
   Building2,
+  Clock,
+  Database,
   FileCheck2,
   FileText,
   Megaphone,
@@ -31,18 +33,45 @@ export interface NavItem {
   icon: LucideIcon;
   /** 表示に必要な権限（無指定なら常に表示） */
   permission?: Permission;
+  /** ハブ配下の子項目（マスタ管理・設定） */
+  children?: NavItem[];
 }
 
 export interface NavGroup {
-  /** グループ見出し（省略時はホーム等の無見出しグループ） */
   title?: string;
   items: NavItem[];
 }
 
-/**
- * 業務の流れに沿ってグループ化したナビゲーション。
- * 毎日の運用 → 記録・予定 → 食事 → 分析 → マスタ → 設定 の順。
- */
+const MASTER_CHILDREN: NavItem[] = [
+  { label: '利用者管理', to: '/users', icon: UserRound, permission: 'user.view' },
+  { label: '職員管理', to: '/staff', icon: Users, permission: 'staff.manage' },
+  { label: '店舗管理', to: '/facilities', icon: Store, permission: 'store.manage' },
+  { label: '法人管理', to: '/corporations', icon: Building2, permission: 'corporation.manage' },
+  { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
+];
+
+const SETTINGS_CHILDREN: NavItem[] = [
+  { label: '打刻設定', to: '/attendance-settings', icon: Clock, permission: 'attendance.edit' },
+  { label: '食事料金', to: '/meal-pricing', icon: UtensilsCrossed, permission: 'settings.price' },
+  { label: '消費税設定', to: '/tax-settings', icon: Percent, permission: 'settings.tax' },
+  { label: '請求書設定', to: '/invoice-settings', icon: FileText, permission: 'billing.issue' },
+];
+
+/** ハブ：サイドバーには1項目、中にカードで子項目を並べる */
+export const MASTERS_HUB: NavItem = {
+  label: 'マスタ管理',
+  to: '/masters',
+  icon: Database,
+  children: MASTER_CHILDREN,
+};
+export const SETTINGS_HUB: NavItem = {
+  label: '設定',
+  to: '/settings',
+  icon: Settings,
+  children: SETTINGS_CHILDREN,
+};
+
+/** 業務の流れに沿ったサイドバー構成。マスタ・設定はハブに集約。 */
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [{ label: 'ダッシュボード', to: '/', icon: LayoutDashboard }],
@@ -74,29 +103,16 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: '分析',
-    items: [{ label: '分析', to: '/analytics', icon: BarChart3, permission: 'attendance.view' }],
-  },
-  {
-    title: 'マスタ管理',
+    title: '分析・管理',
     items: [
-      { label: '利用者管理', to: '/users', icon: UserRound, permission: 'user.view' },
-      { label: '職員管理', to: '/staff', icon: Users, permission: 'staff.manage' },
-      { label: '店舗管理', to: '/facilities', icon: Store, permission: 'store.manage' },
-      { label: '法人管理', to: '/corporations', icon: Building2, permission: 'corporation.manage' },
-      { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
-    ],
-  },
-  {
-    title: '設定',
-    items: [
-      { label: '打刻設定', to: '/attendance-settings', icon: Settings, permission: 'attendance.edit' },
-      { label: '食事料金', to: '/meal-pricing', icon: UtensilsCrossed, permission: 'settings.price' },
-      { label: '消費税設定', to: '/tax-settings', icon: Percent, permission: 'settings.tax' },
-      { label: '請求書設定', to: '/invoice-settings', icon: FileText, permission: 'billing.issue' },
+      { label: '分析', to: '/analytics', icon: BarChart3, permission: 'attendance.view' },
+      MASTERS_HUB,
+      SETTINGS_HUB,
     ],
   },
 ];
 
-/** フラット版（バッジ計算・現在ページ判定・ショートカット用の互換エクスポート）。 */
-export const NAV_ITEMS: NavItem[] = NAV_GROUPS.flatMap((g) => g.items);
+/** タイトル解決・現在ページ判定用：全遷移先（ハブ＋子＋トップ項目）をフラット化。 */
+export const ALL_DESTINATIONS: NavItem[] = NAV_GROUPS.flatMap((g) =>
+  g.items.flatMap((it) => (it.children ? [it, ...it.children] : [it])),
+);

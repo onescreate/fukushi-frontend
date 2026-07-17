@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useMe, hasPermission } from '../features/auth/useMe';
+import { PageHeader } from '../components/layout/PageHeader';
 import { useFacility } from '../contexts/FacilityContext';
 import { useFacilityStats, useBadges } from '../features/stats/api';
 import { usePendingCount } from '../features/schedules/approvalApi';
@@ -97,16 +98,10 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* ヘッダー */}
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">ホーム</p>
-        <h1 className="mt-0.5 text-[22px] font-black tracking-tight text-slate-800">
-          ようこそ、{me?.name ?? ''} さん
-        </h1>
-        <p className="mt-1 text-[12.5px] font-semibold text-slate-500">
-          {year}年{month}月の状況です。
-        </p>
-      </div>
+      <PageHeader
+        title={`ようこそ、${me?.name ?? ''} さん`}
+        description={`${year}年${month}月の状況`}
+      />
 
       {/* 要対応インボックス */}
       {alerts.length > 0 && (

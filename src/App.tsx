@@ -32,6 +32,8 @@ import FacilitiesPage from './pages/masters/FacilitiesPage';
 import StaffPage from './pages/masters/StaffPage';
 import UsersPage from './pages/masters/UsersPage';
 import DevicesPage from './pages/masters/DevicesPage';
+import { HubPage } from './pages/HubPage';
+import { MASTERS_HUB, SETTINGS_HUB } from './app/nav';
 
 export default function App() {
   return (
@@ -54,6 +56,26 @@ export default function App() {
       {/* 認証済みレイアウト（サイドバー＋ヘッダー） */}
       <Route element={<ProtectedLayout />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route
+          path="/masters"
+          element={
+            <HubPage
+              title="マスタ管理"
+              description="利用者・職員・店舗・法人・端末の登録と管理"
+              items={MASTERS_HUB.children ?? []}
+            />
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <HubPage
+              title="設定"
+              description="打刻・食事料金・消費税・請求書の各種設定"
+              items={SETTINGS_HUB.children ?? []}
+            />
+          }
+        />
         <Route
           path="/attendance-list"
           element={

@@ -7,7 +7,7 @@ import { usePendingCount } from '../../features/schedules/approvalApi';
 import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { useBadges } from '../../features/stats/api';
 import { useHealthMissingCount } from '../../features/health/api';
-import { NAV_GROUPS, NAV_ITEMS, type NavItem } from '../../app/nav';
+import { NAV_GROUPS, ALL_DESTINATIONS, type NavItem } from '../../app/nav';
 import { FacilityProvider } from '../../contexts/FacilityContext';
 import { FacilitySwitcher } from './FacilitySwitcher';
 
@@ -55,9 +55,11 @@ export default function AppLayout() {
 
   const canSee = (item: NavItem) =>
     !item.permission || me?.permissions?.includes(item.permission);
+  // ハブは子のいずれかが見えれば表示
+  const isVisible = (item: NavItem) =>
+    item.children ? item.children.some(canSee) : canSee(item);
 
-  const current = [...NAV_ITEMS]
-    .filter(canSee)
+  const current = [...ALL_DESTINATIONS]
     .sort((a, b) => b.to.length - a.to.length)
     .find((i) =>
       i.to === '/'
@@ -72,48 +74,47 @@ export default function AppLayout() {
   const renderItem = (item: NavItem) => {
     const Icon = item.icon;
     const badge = badgeCountFor(item.to);
+    // ハブは自身か子のいずれかのパスに居ればアクティブ
+    const active =
+      item.to === '/'
+        ? location.pathname === '/'
+        : location.pathname.startsWith(item.to) ||
+          (item.children?.some((c) => location.pathname.startsWith(c.to)) ??
+            false);
     return (
       <NavLink
         key={item.to}
         to={item.to}
         end={item.to === '/'}
         title={collapsed ? item.label : undefined}
-        className={({ isActive }) =>
-          `group relative flex items-center rounded-lg text-[12.5px] font-semibold transition-all duration-150 ${
-            collapsed ? 'h-9 justify-center' : 'h-9 gap-3 px-2.5'
-          } ${
-            isActive
-              ? 'bg-gradient-to-r from-indigo-500/25 to-indigo-500/[0.08] text-white shadow-sm shadow-black/20'
-              : 'text-[#8A8B98] hover:bg-indigo-500/15 hover:text-white'
-          }`
-        }
+        className={`group relative flex items-center rounded-lg text-[12.5px] font-semibold transition-all duration-150 ${
+          collapsed ? 'h-9 justify-center' : 'h-9 gap-3 px-2.5'
+        } ${
+          active
+            ? 'bg-gradient-to-r from-indigo-500/25 to-indigo-500/[0.08] text-white shadow-sm shadow-black/20'
+            : 'text-[#8A8B98] hover:bg-indigo-500/15 hover:text-white'
+        }`}
       >
-        {({ isActive }) => (
-          <>
-            <span
-              className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-indigo-500 transition-opacity ${
-                isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-80'
-              }`}
-            />
-            <Icon
-              className={`size-[18px] shrink-0 transition-colors ${
-                isActive
-                  ? 'text-indigo-300'
-                  : 'text-[#8A8B98] group-hover:text-indigo-300'
-              }`}
-              strokeWidth={1.9}
-            />
-            {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
-            {badge > 0 && (
-              <span
-                className={`flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ${
-                  collapsed ? 'absolute right-1 top-1 h-4' : 'h-[18px]'
-                }`}
-              >
-                {badge}
-              </span>
-            )}
-          </>
+        <span
+          className={`absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r-full bg-indigo-500 transition-opacity ${
+            active ? 'opacity-100' : 'opacity-0 group-hover:opacity-80'
+          }`}
+        />
+        <Icon
+          className={`size-[18px] shrink-0 transition-colors ${
+            active ? 'text-indigo-300' : 'text-[#8A8B98] group-hover:text-indigo-300'
+          }`}
+          strokeWidth={1.9}
+        />
+        {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+        {badge > 0 && (
+          <span
+            className={`flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ${
+              collapsed ? 'absolute right-1 top-1 h-4' : 'h-[18px]'
+            }`}
+          >
+            {badge}
+          </span>
         )}
       </NavLink>
     );
@@ -150,7 +151,7 @@ export default function AppLayout() {
           {/* ナビ（グループ化） */}
           <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
             {NAV_GROUPS.map((group, gi) => {
-              const items = group.items.filter(canSee);
+              const items = group.items.filter(isVisible);
               if (items.length === 0) return null;
               return (
                 <div key={group.title ?? `g${gi}`}>
@@ -235,7 +236,7 @@ export default function AppLayout() {
           </header>
 
           <main className="min-w-0 flex-1 overflow-y-auto bg-[#FBFBFC]">
-            <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+            <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
               <Outlet />
             </div>
           </main>
