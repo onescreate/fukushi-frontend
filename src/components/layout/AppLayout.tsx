@@ -10,6 +10,7 @@ import { useHealthMissingCount } from '../../features/health/api';
 import { NAV_GROUPS, ALL_DESTINATIONS, type NavItem } from '../../app/nav';
 import { FacilityProvider } from '../../contexts/FacilityContext';
 import { FacilitySwitcher } from './FacilitySwitcher';
+import { SystemSwitcher } from './SystemSwitcher';
 
 const ROLE_LABEL: Record<string, string> = {
   system_admin: 'システム管理者',
@@ -129,23 +130,13 @@ export default function AppLayout() {
             collapsed ? 'w-14' : 'w-[224px]'
           }`}
         >
-          {/* ブランド */}
+          {/* ブランド＝システム切替（KGI踏襲） */}
           <div
             className={`flex min-h-[52px] shrink-0 items-center border-b border-white/[0.06] ${
-              collapsed ? 'justify-center px-0' : 'gap-2.5 px-4'
+              collapsed ? 'px-1.5' : 'px-2'
             }`}
           >
-            <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 text-[13px] font-black text-white shadow-sm">
-              福
-            </div>
-            {!collapsed && (
-              <div className="leading-tight">
-                <p className="text-[13px] font-bold text-[#EDEDF2]">就労支援</p>
-                <p className="text-[10px] font-medium text-[#8A8B98]">
-                  利用者管理システム
-                </p>
-              </div>
-            )}
+            <SystemSwitcher collapsed={collapsed} />
           </div>
 
           {/* ナビ（グループ化） */}
