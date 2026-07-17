@@ -1,7 +1,6 @@
 import {
   Activity,
   BarChart3,
-  Building2,
   Clock,
   Database,
   FileCheck2,
@@ -19,7 +18,6 @@ import {
   Tablet,
   Truck,
   UserRound,
-  Users,
   Utensils,
   UtensilsCrossed,
   type LucideIcon,
@@ -42,10 +40,8 @@ export interface NavGroup {
 }
 
 const MASTER_CHILDREN: NavItem[] = [
+  { label: '事業所の設定', to: '/portal-shops', icon: Store, permission: 'store.manage' },
   { label: '利用者管理', to: '/users', icon: UserRound, permission: 'user.view' },
-  { label: '職員管理', to: '/staff', icon: Users, permission: 'staff.manage' },
-  { label: '店舗管理', to: '/facilities', icon: Store, permission: 'store.manage' },
-  { label: '法人管理', to: '/corporations', icon: Building2, permission: 'corporation.manage' },
   { label: '端末管理', to: '/devices', icon: Tablet, permission: 'store.manage' },
 ];
 

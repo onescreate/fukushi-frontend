@@ -32,6 +32,7 @@ import StaffPage from './pages/masters/StaffPage';
 import UsersPage from './pages/masters/UsersPage';
 import DevicesPage from './pages/masters/DevicesPage';
 import { HubPage } from './pages/HubPage';
+import PortalShopsPage from './pages/PortalShopsPage';
 import { MASTERS_HUB, SETTINGS_HUB } from './app/nav';
 
 export default function App() {
@@ -149,6 +150,14 @@ export default function App() {
         />
         {/* 当日ロースターはダッシュボードに統合したためリダイレクト */}
         <Route path="/roster" element={<Navigate to="/" replace />} />
+        <Route
+          path="/portal-shops"
+          element={
+            <RequirePerm perm="store.manage">
+              <PortalShopsPage />
+            </RequirePerm>
+          }
+        />
         <Route
           path="/attendance-settings"
           element={
