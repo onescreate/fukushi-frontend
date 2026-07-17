@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Activity,
@@ -18,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useMe, hasPermission } from '../features/auth/useMe';
 import { PageHeader } from '../components/layout/PageHeader';
+import { SectionHeader } from '../components/layout/SectionHeader';
 import { useFacility } from '../contexts/FacilityContext';
 import { useFacilityStats, useBadges } from '../features/stats/api';
 import { usePendingCount } from '../features/schedules/approvalApi';
@@ -25,17 +25,6 @@ import { usePendingMealCount } from '../features/meals/reservationApi';
 import { useHealthMissingCount } from '../features/health/api';
 
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
-
-/** KGI風セクション見出し */
-function SectionHeader({ icon: Icon, title, right }: { icon: LucideIcon; title: string; right?: ReactNode }) {
-  return (
-    <div className="mb-3 flex items-center gap-2 border-b-2 border-slate-200 pb-2">
-      <Icon className="size-4 text-slate-400" />
-      <h2 className="text-[14px] font-bold text-slate-800">{title}</h2>
-      {right && <div className="ml-auto">{right}</div>}
-    </div>
-  );
-}
 
 /** KPIミニタイル */
 function StatTile({ icon: Icon, label, value, sub, tone = 'slate' }: {

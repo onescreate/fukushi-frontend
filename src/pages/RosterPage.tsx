@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
-import { Check, Pencil, Utensils, X } from 'lucide-react';
+import { CalendarCheck, Check, ListChecks, Pencil, Utensils, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
+import { SectionHeader } from '../components/layout/SectionHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -187,24 +188,29 @@ export default function RosterPage() {
 
           {/* 2. 名簿・打刻リスト */}
           <div>
-            <div className="mb-3 flex flex-wrap items-center gap-3">
-              <h3 className="text-base font-bold text-foreground">名簿・打刻リスト</h3>
-              {summary.missing > 0 && (
-                <span className="rounded border bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground">
-                  未打刻 {summary.missing}件
-                </span>
-              )}
-              {summary.late > 0 && (
-                <span className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-600">
-                  遅刻 {summary.late}件
-                </span>
-              )}
-              {summary.early > 0 && (
-                <span className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-600">
-                  早退 {summary.early}件
-                </span>
-              )}
-            </div>
+            <SectionHeader
+              icon={ListChecks}
+              title="名簿・打刻リスト"
+              right={
+                <>
+                  {summary.missing > 0 && (
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+                      未打刻 {summary.missing}
+                    </span>
+                  )}
+                  {summary.late > 0 && (
+                    <span className="rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
+                      遅刻 {summary.late}
+                    </span>
+                  )}
+                  {summary.early > 0 && (
+                    <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-600">
+                      早退 {summary.early}
+                    </span>
+                  )}
+                </>
+              }
+            />
             <Card className="overflow-hidden p-0">
               <Table>
                 <TableHeader>
@@ -355,14 +361,17 @@ export default function RosterPage() {
           {/* 3. 承認待ちリスト */}
           {canApprove && (
             <div>
-              <div className="mb-3 flex items-center gap-3">
-                <h3 className="text-base font-bold text-foreground">承認待ちリスト</h3>
-                {(pending ?? []).length > 0 && (
-                  <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                    {(pending ?? []).length}
-                  </span>
-                )}
-              </div>
+              <SectionHeader
+                icon={CalendarCheck}
+                title="承認待ちリスト"
+                right={
+                  (pending ?? []).length > 0 ? (
+                    <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
+                      {(pending ?? []).length} 件
+                    </span>
+                  ) : undefined
+                }
+              />
               <Card className="overflow-hidden p-0">
                 <Table>
                   <TableHeader>
