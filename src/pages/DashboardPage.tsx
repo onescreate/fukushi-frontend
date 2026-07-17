@@ -1,55 +1,58 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   Activity,
   ArrowUpRight,
   CalendarCheck,
-  CalendarClock,
-  CheckCircle2,
   ClipboardCheck,
+  Clock,
   Inbox,
+  Pencil,
   Receipt,
   Store,
   Truck,
   UserRound,
+  Users,
   Utensils,
-  Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { useMe, hasPermission } from '../features/auth/useMe';
 import { PageHeader } from '../components/layout/PageHeader';
 import { SectionHeader } from '../components/layout/SectionHeader';
-import { useFacility } from '../contexts/FacilityContext';
-import { useFacilityStats, useBadges } from '../features/stats/api';
+import { ALL_FACILITIES, useFacility } from '../contexts/FacilityContext';
+import { useBadges } from '../features/stats/api';
 import { usePendingCount } from '../features/schedules/approvalApi';
 import { usePendingMealCount } from '../features/meals/reservationApi';
 import { useHealthMissingCount } from '../features/health/api';
+import { useRoster, type RosterRow } from '../features/attendance/api';
+import { useAdminMealUpsert } from '../features/meals/reservationApi';
+import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
+import { getApiErrorMessage } from '../lib/errors';
+import { pad } from '../lib/format';
 
-const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
-
-/** KPIミニタイル */
-function StatTile({ icon: Icon, label, value, sub, tone = 'slate' }: {
+/** 今日の集計タイル */
+function CountTile({ icon: Icon, label, value, tone }: {
   icon: LucideIcon;
   label: string;
-  value: string | number;
-  sub?: string;
-  tone?: 'slate' | 'indigo' | 'emerald' | 'rose' | 'amber';
+  value: number;
+  tone: 'indigo' | 'emerald' | 'amber' | 'rose' | 'slate';
 }) {
-  const toneText: Record<string, string> = {
-    slate: 'text-slate-500',
+  const cls = {
     indigo: 'text-indigo-500',
     emerald: 'text-emerald-500',
-    rose: 'text-rose-500',
     amber: 'text-amber-500',
-  };
+    rose: 'text-rose-500',
+    slate: 'text-slate-400',
+  }[tone];
   return (
-    <div className="rounded-lg border border-slate-100 bg-slate-50/50 p-3.5">
+    <div className="rounded-xl border border-[#ECEDF1] bg-white p-3.5 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
       <div className="flex items-center gap-1.5">
-        <Icon className={`size-3.5 ${toneText[tone]}`} />
-        <span className="text-[11.5px] font-bold text-slate-700">{label}</span>
+        <Icon className={`size-3.5 ${cls}`} />
+        <span className="text-[11.5px] font-bold text-slate-600">{label}</span>
       </div>
-      <div className="mt-1.5 flex items-baseline gap-1">
-        <span className="text-[20px] font-black leading-none tabular-nums text-slate-800">{value}</span>
-        {sub && <span className="text-[11px] font-bold text-slate-400">{sub}</span>}
+      <div className="mt-1 text-[22px] font-black leading-none tabular-nums text-slate-800">
+        {value}
       </div>
     </div>
   );
@@ -57,10 +60,12 @@ function StatTile({ icon: Icon, label, value, sub, tone = 'slate' }: {
 
 export default function DashboardPage() {
   const { data: me } = useMe();
-  const { facilityId, isAll, facilities } = useFacility();
+  const canEdit = hasPermission(me, 'attendance.edit');
+  const { facilityId, setFacilityId, facilities, isAll } = useFacility();
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const [editing, setEditing] = useState<RosterRow | null>(null);
 
   // ---- 要対応（グローバル） ----
   const { data: pending } = usePendingCount(hasPermission(me, 'schedule.approve'));
@@ -69,7 +74,6 @@ export default function DashboardPage() {
     hasPermission(me, 'billing.view') || hasPermission(me, 'meal.delivery.manage');
   const { data: badges } = useBadges(canSeeBadges);
   const { data: healthMissing } = useHealthMissingCount(hasPermission(me, 'health.view'));
-
   const alerts = [
     { label: '承認待ちの予定', to: '/approvals', icon: CalendarCheck, count: pending?.count ?? 0, show: hasPermission(me, 'schedule.approve') },
     { label: '承認待ちの食事', to: '/meal-approvals', icon: ClipboardCheck, count: mealPending?.count ?? 0, show: hasPermission(me, 'meal.manage') },
@@ -77,39 +81,57 @@ export default function DashboardPage() {
     { label: '納品の未入力', to: '/meal-deliveries', icon: Truck, count: badges?.deliveryMissing ?? 0, show: hasPermission(me, 'meal.delivery.manage') },
     { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: healthMissing?.count ?? 0, show: hasPermission(me, 'health.view') },
   ].filter((a) => a.show);
-  const totalTodo = alerts.reduce((s, a) => s + a.count, 0);
 
-  // ---- 当月サマリー（特定店舗のみ） ----
-  const canViewStats = hasPermission(me, 'attendance.view');
-  const showStats = canViewStats && !isAll && !!facilityId;
-  const { data: stats } = useFacilityStats(showStats ? facilityId : '', year, month);
-  const facilityName = facilities.find((f) => f.id === facilityId)?.name;
+  // ---- 今日の来所（特定店舗） ----
+  const canViewAtt = hasPermission(me, 'attendance.view');
+  const rosterFacility = canViewAtt && !isAll ? facilityId : '';
+  const { data: rows } = useRoster(rosterFacility, today);
+  const list = rows ?? [];
+  const present = list.filter((r) => r.status === 'present');
+  const notYet = list.filter((r) => r.status === 'notyet' && (r.planIn || r.scheduleStatus === 'approved'));
+  const mealUsers = list.filter((r) => r.meal);
+  const eaten = list.filter((r) => r.meal?.status === 'eaten');
+  const lateEarly = list.filter((r) => r.isLate || r.isEarlyLeave);
+
+  const mealUpsert = useAdminMealUpsert();
+  const setMeal = async (row: RosterRow, status: 'reserved' | 'eaten') => {
+    try {
+      await mealUpsert.mutateAsync({ userId: row.userId, date: today, status });
+      toast.success(status === 'eaten' ? '喫食を記録しました' : '喫食を取り消しました');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
+
+  // 店舗ドロップダウン（ダッシュボード右上）
+  const facilityDropdown = facilities.length > 0 && (
+    <div className="flex items-center gap-1.5">
+      <Store className="size-4 text-slate-400" />
+      <select
+        value={facilityId || ''}
+        onChange={(e) => setFacilityId(e.target.value)}
+        className="h-9 rounded-lg border border-[#E3E4EA] bg-white px-3 text-[13px] font-bold text-slate-800 outline-none transition-colors hover:border-[#D3D4DC] focus:border-indigo-400"
+      >
+        {facilities.length > 1 && <option value={ALL_FACILITIES}>全店舗</option>}
+        {facilities.map((f) => (
+          <option key={f.id} value={f.id}>{f.name}</option>
+        ))}
+      </select>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="ダッシュボード"
-        description={`ようこそ、${me?.name ?? ''} さん — ${year}年${month}月の状況`}
+        description={`ようこそ、${me?.name ?? ''} さん`}
+        action={facilityDropdown || undefined}
       />
 
-      {/* 要対応インボックス */}
+      {/* 要対応 */}
       {alerts.length > 0 && (
         <section>
-          <SectionHeader
-            icon={Inbox}
-            title="要対応"
-            right={
-              totalTodo === 0 ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                  <CheckCircle2 className="size-3.5" /> すべて対応済み
-                </span>
-              ) : (
-                <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
-                  {totalTodo} 件
-                </span>
-              )
-            }
-          />
+          <SectionHeader icon={Inbox} title="要対応" />
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {alerts.map((a) => {
               const Icon = a.icon;
@@ -119,20 +141,16 @@ export default function DashboardPage() {
                   key={a.to}
                   to={a.to}
                   className={`group rounded-xl border p-3.5 transition-all hover:-translate-y-0.5 ${
-                    active
-                      ? 'border-rose-200 bg-rose-50 hover:shadow-md'
-                      : 'border-[#ECEDF1] bg-white hover:border-slate-300'
+                    active ? 'border-rose-200 bg-rose-50 hover:shadow-md' : 'border-[#ECEDF1] bg-white hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className={`flex size-8 items-center justify-center rounded-lg ${active ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400'}`}>
                       <Icon className="size-4" />
                     </div>
-                    <ArrowUpRight className={`size-4 shrink-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${active ? 'text-rose-300' : 'text-slate-300'}`} />
+                    <ArrowUpRight className={`size-4 shrink-0 ${active ? 'text-rose-300' : 'text-slate-300'}`} />
                   </div>
-                  <div className={`mt-2 text-[24px] font-black leading-none tabular-nums ${active ? 'text-rose-600' : 'text-slate-300'}`}>
-                    {a.count}
-                  </div>
+                  <div className={`mt-2 text-[24px] font-black leading-none tabular-nums ${active ? 'text-rose-600' : 'text-slate-300'}`}>{a.count}</div>
                   <div className="mt-1 text-[12px] font-bold text-slate-600">{a.label}</div>
                 </Link>
               );
@@ -141,59 +159,139 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* 当月サマリー */}
-      {canViewStats && (
+      {/* 今日の来所 */}
+      {canViewAtt && (
         <section>
           <SectionHeader
-            icon={CalendarClock}
-            title={`当月のサマリー${facilityName && showStats ? `（${facilityName}）` : ''}`}
+            icon={Users}
+            title="今日の来所"
             right={
-              <Link to="/analytics" className="inline-flex items-center gap-1 text-[12px] font-bold text-indigo-600 hover:text-indigo-700">
-                分析を開く <ArrowUpRight className="size-3.5" />
+              <Link to="/roster" className="inline-flex items-center gap-1 text-[12px] font-bold text-indigo-600 hover:text-indigo-700">
+                ロースターを開く <ArrowUpRight className="size-3.5" />
               </Link>
             }
           />
-          {!showStats ? (
+          {!rosterFacility ? (
             <div className="rounded-xl border border-[#ECEDF1] bg-white p-8 text-center">
               <Store className="mx-auto size-8 text-slate-300" />
-              <p className="mt-2 text-[13px] font-bold text-slate-500">店舗を選ぶと当月の集計を表示します</p>
-              <p className="mt-1 text-[12px] font-medium text-slate-400">ヘッダー右上の店舗切替から選択してください。</p>
+              <p className="mt-2 text-[13px] font-bold text-slate-500">店舗を選ぶと今日の来所状況を表示します</p>
+              <p className="mt-1 text-[12px] font-medium text-slate-400">右上の店舗ドロップダウンから選択してください。</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {/* 通所 */}
-              <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">通所</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                  <StatTile icon={UserRound} label="予定" value={stats?.attendance.planned ?? '—'} tone="slate" />
-                  <StatTile icon={CheckCircle2} label="出席" value={stats?.attendance.present ?? '—'} tone="emerald" />
-                  <StatTile icon={UserRound} label="欠席" value={stats?.attendance.absent ?? '—'} tone="rose" />
-                  <StatTile icon={UserRound} label="遅刻" value={stats?.attendance.late ?? '—'} tone="amber" />
-                  <StatTile icon={UserRound} label="早退" value={stats?.attendance.earlyLeave ?? '—'} tone="amber" />
-                  <StatTile icon={Activity} label="出席率" value={stats?.attendance.rate != null ? `${stats.attendance.rate}%` : '—'} tone="indigo" />
+              {/* 集計タイル */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                <CountTile icon={UserRound} label="来所" value={present.length} tone="emerald" />
+                <CountTile icon={Utensils} label="喫食" value={eaten.length} tone="indigo" />
+                <CountTile icon={Clock} label="未打刻" value={notYet.length} tone="amber" />
+                <CountTile icon={Clock} label="遅刻" value={list.filter((r) => r.isLate).length} tone="rose" />
+                <CountTile icon={Clock} label="早退" value={list.filter((r) => r.isEarlyLeave).length} tone="rose" />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                {/* 来所者一覧（打刻編集） */}
+                <div className="rounded-xl border border-[#ECEDF1] bg-white shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+                    <p className="text-[13px] font-bold text-slate-800">来所者</p>
+                    <span className="text-[12px] font-bold text-slate-400">{present.length} 名</span>
+                  </div>
+                  <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                    {present.length === 0 ? (
+                      <p className="px-4 py-6 text-center text-[12px] font-medium text-slate-400">まだ来所打刻がありません。</p>
+                    ) : (
+                      present.map((r) => (
+                        <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
+                          <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                          <span className="font-mono text-[12px] text-slate-500">
+                            {r.clockIn ?? '—'}{r.clockIn || r.clockOut ? '〜' : ''}{r.clockOut ?? ''}
+                          </span>
+                          {r.isLate && <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">遅刻</span>}
+                          {r.isEarlyLeave && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">早退</span>}
+                          {canEdit && (
+                            <button onClick={() => setEditing(r)} title="打刻を編集" className="flex size-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-indigo-600">
+                              <Pencil className="size-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* 喫食者一覧（喫食編集） */}
+                <div className="rounded-xl border border-[#ECEDF1] bg-white shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2.5">
+                    <p className="text-[13px] font-bold text-slate-800">喫食者</p>
+                    <span className="text-[12px] font-bold text-slate-400">喫食 {eaten.length} / 予定 {mealUsers.length}</span>
+                  </div>
+                  <div className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+                    {mealUsers.length === 0 ? (
+                      <p className="px-4 py-6 text-center text-[12px] font-medium text-slate-400">今日の食事予定はありません。</p>
+                    ) : (
+                      mealUsers.map((r) => {
+                        const ate = r.meal?.status === 'eaten';
+                        return (
+                          <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
+                            <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${ate ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'}`}>
+                              {ate ? '喫食済' : '予約'}
+                            </span>
+                            {canEdit && (
+                              ate ? (
+                                <button onClick={() => setMeal(r, 'reserved')} disabled={mealUpsert.isPending} className="rounded-lg px-2 py-1 text-[11px] font-bold text-slate-500 transition-colors hover:bg-slate-100">
+                                  取消
+                                </button>
+                              ) : (
+                                <button onClick={() => setMeal(r, 'eaten')} disabled={mealUpsert.isPending} className="rounded-lg bg-indigo-600 px-2.5 py-1 text-[11px] font-bold text-white transition-colors hover:bg-indigo-700">
+                                  喫食
+                                </button>
+                              )
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
-              {/* 食事・請求 */}
-              <div>
-                <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">食事・請求</p>
-                <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <StatTile icon={Utensils} label="食事提供数" value={stats?.meals.eaten ?? '—'} sub={stats ? `予約 ${stats.meals.reserved}` : undefined} tone="indigo" />
-                  <StatTile icon={Receipt} label="請求総額" value={stats?.billing ? yen(stats.billing.total) : '—'} tone="slate" />
-                  <StatTile icon={Wallet} label="入金済" value={stats?.billing ? yen(stats.billing.paidAmount) : '—'} sub={stats?.billing ? `${stats.billing.paidCount}件` : undefined} tone="emerald" />
-                  <StatTile icon={Wallet} label="未払い" value={stats?.billing ? yen(stats.billing.unpaidAmount) : '—'} sub={stats?.billing ? `${stats.billing.unpaidCount}件` : undefined} tone="rose" />
+
+              {/* 遅刻・早退リスト */}
+              {lateEarly.length > 0 && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50/40 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                  <div className="flex items-center justify-between border-b border-rose-100 px-4 py-2.5">
+                    <p className="text-[13px] font-bold text-rose-700">遅刻・早退</p>
+                    <span className="text-[12px] font-bold text-rose-400">{lateEarly.length} 名</span>
+                  </div>
+                  <div className="divide-y divide-rose-100">
+                    {lateEarly.map((r) => (
+                      <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
+                        <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                        {r.isLate && <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">遅刻</span>}
+                        {r.isEarlyLeave && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">早退</span>}
+                        <span className="truncate text-[12px] font-medium text-slate-500">
+                          {r.lateReason ?? r.earlyLeaveReason ?? '理由未入力'}
+                        </span>
+                        {canEdit && (
+                          <button onClick={() => setEditing(r)} title="打刻・理由を編集" className="flex size-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white hover:text-indigo-600">
+                            <Pencil className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </section>
       )}
 
-      {/* 権限が少ないユーザー向けのフォールバック */}
-      {alerts.length === 0 && !canViewStats && (
-        <div className="rounded-xl border border-[#ECEDF1] bg-white p-8 text-center">
-          <p className="text-[13px] font-bold text-slate-500">左のメニューから操作を選んでください。</p>
-        </div>
-      )}
+      <ManualAttendanceDialog
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        row={editing}
+        date={today}
+      />
     </div>
   );
 }
