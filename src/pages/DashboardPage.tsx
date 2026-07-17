@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
 import {
   Activity,
-  ArrowUpRight,
+  ArrowRight,
   CalendarCheck,
   CalendarClock,
   CheckCircle2,
   ClipboardCheck,
-  Inbox,
+  ListChecks,
   Receipt,
   Store,
   Truck,
@@ -23,8 +23,20 @@ import { useFacilityStats, useBadges } from '../features/stats/api';
 import { usePendingCount } from '../features/schedules/approvalApi';
 import { usePendingMealCount } from '../features/meals/reservationApi';
 import { useHealthMissingCount } from '../features/health/api';
+import { useRoster } from '../features/attendance/api';
+import { pad } from '../lib/format';
 
 const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
+
+interface Task {
+  label: string;
+  hint: string;
+  count: number;
+  unit: string;
+  to: string;
+  btn: string;
+  icon: LucideIcon;
+}
 
 /** KPIミニタイル */
 function StatTile({ icon: Icon, label, value, sub, tone = 'slate' }: {
@@ -61,8 +73,9 @@ export default function DashboardPage() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
+  const today = `${year}-${pad(month)}-${pad(now.getDate())}`;
 
-  // ---- 要対応（グローバル） ----
+  // ---- 各種シグナル ----
   const { data: pending } = usePendingCount(hasPermission(me, 'schedule.approve'));
   const { data: mealPending } = usePendingMealCount(hasPermission(me, 'meal.manage'));
   const canSeeBadges =
@@ -70,18 +83,34 @@ export default function DashboardPage() {
   const { data: badges } = useBadges(canSeeBadges);
   const { data: healthMissing } = useHealthMissingCount(hasPermission(me, 'health.view'));
 
-  const alerts = [
-    { label: '承認待ちの予定', to: '/approvals', icon: CalendarCheck, count: pending?.count ?? 0, show: hasPermission(me, 'schedule.approve') },
-    { label: '承認待ちの食事', to: '/meal-approvals', icon: ClipboardCheck, count: mealPending?.count ?? 0, show: hasPermission(me, 'meal.manage') },
-    { label: '未払いの請求', to: '/meal-billing', icon: Receipt, count: badges?.unpaid ?? 0, show: hasPermission(me, 'billing.view') },
-    { label: '納品の未入力', to: '/meal-deliveries', icon: Truck, count: badges?.deliveryMissing ?? 0, show: hasPermission(me, 'meal.delivery.manage') },
-    { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: healthMissing?.count ?? 0, show: hasPermission(me, 'health.view') },
-  ].filter((a) => a.show);
-  const totalTodo = alerts.reduce((s, a) => s + a.count, 0);
+  // 当日ロースター（特定店舗のとき）
+  const canViewAtt = hasPermission(me, 'attendance.view');
+  const rosterFacility = canViewAtt && !isAll ? facilityId : '';
+  const { data: roster } = useRoster(rosterFacility, today);
+  const notYet = (roster ?? []).filter((r) => r.status === 'notyet').length;
+  const mealsToRecord = (roster ?? []).filter((r) => r.meal?.status === 'reserved').length;
 
-  // ---- 当月サマリー（特定店舗のみ） ----
-  const canViewStats = hasPermission(me, 'attendance.view');
-  const showStats = canViewStats && !isAll && !!facilityId;
+  // ---- 今日やること ----
+  const tasks: Task[] = [];
+  if (hasPermission(me, 'schedule.approve'))
+    tasks.push({ label: '通所予定を承認する', hint: '利用者からの予定申請を確認', count: pending?.count ?? 0, unit: '件', to: '/approvals', btn: '承認へ', icon: CalendarCheck });
+  if (hasPermission(me, 'meal.manage'))
+    tasks.push({ label: '食事予約を承認する', hint: '食事の予約・取消の申請を確認', count: mealPending?.count ?? 0, unit: '件', to: '/meal-approvals', btn: '承認へ', icon: ClipboardCheck });
+  if (rosterFacility)
+    tasks.push({ label: '未打刻の利用者を確認', hint: '来所予定なのに打刻が無い人', count: notYet, unit: '名', to: '/roster', btn: 'ロースターへ', icon: ListChecks });
+  if (rosterFacility)
+    tasks.push({ label: '食事の喫食を記録', hint: '予約済みで未記録の食事', count: mealsToRecord, unit: '件', to: '/roster', btn: '記録へ', icon: Utensils });
+  if (hasPermission(me, 'meal.delivery.manage'))
+    tasks.push({ label: '食事の納品数を入力', hint: '発注に対する納品数の記録', count: badges?.deliveryMissing ?? 0, unit: '日', to: '/meal-deliveries', btn: '入力へ', icon: Truck });
+  if (hasPermission(me, 'health.view'))
+    tasks.push({ label: '健康記録の未入力を確認', hint: '当月の体重・BMI未記録', count: healthMissing?.count ?? 0, unit: '件', to: '/health-records', btn: '記録へ', icon: Activity });
+  if (hasPermission(me, 'billing.view'))
+    tasks.push({ label: '未払いの請求を確認', hint: '入金がまだの請求', count: badges?.unpaid ?? 0, unit: '件', to: '/meal-billing', btn: '請求へ', icon: Receipt });
+
+  const totalTodo = tasks.reduce((s, t) => s + t.count, 0);
+
+  // ---- 当月サマリー ----
+  const showStats = canViewAtt && !isAll && !!facilityId;
   const { data: stats } = useFacilityStats(showStats ? facilityId : '', year, month);
   const facilityName = facilities.find((f) => f.id === facilityId)?.name;
 
@@ -89,15 +118,15 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <PageHeader
         title="ダッシュボード"
-        description={`ようこそ、${me?.name ?? ''} さん — ${year}年${month}月の状況`}
+        description={`ようこそ、${me?.name ?? ''} さん — ${year}年${month}月`}
       />
 
-      {/* 要対応インボックス */}
-      {alerts.length > 0 && (
+      {/* 今日やること */}
+      {tasks.length > 0 && (
         <section>
           <SectionHeader
-            icon={Inbox}
-            title="要対応"
+            icon={ListChecks}
+            title="今日やること"
             right={
               totalTodo === 0 ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600">
@@ -105,36 +134,60 @@ export default function DashboardPage() {
                 </span>
               ) : (
                 <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600">
-                  {totalTodo} 件
+                  未対応 {totalTodo}
                 </span>
               )
             }
           />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {alerts.map((a) => {
-              const Icon = a.icon;
-              const active = a.count > 0;
+          <p className="mb-3 text-[12px] font-medium text-slate-400">
+            上から順に対応すれば、その日の作業が完了します。数字は対応が必要な件数です。
+          </p>
+          <div className="overflow-hidden rounded-xl border border-[#ECEDF1] bg-white shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+            {tasks.map((t, i) => {
+              const Icon = t.icon;
+              const done = t.count === 0;
               return (
-                <Link
-                  key={a.to}
-                  to={a.to}
-                  className={`group rounded-xl border p-3.5 transition-all hover:-translate-y-0.5 ${
-                    active
-                      ? 'border-rose-200 bg-rose-50 hover:shadow-md'
-                      : 'border-[#ECEDF1] bg-white hover:border-slate-300'
+                <div
+                  key={t.to + t.label}
+                  className={`flex items-center gap-3 border-b border-slate-100 px-4 py-3 last:border-0 ${
+                    done ? 'bg-white' : 'bg-rose-50/30'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className={`flex size-8 items-center justify-center rounded-lg ${active ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-400'}`}>
-                      <Icon className="size-4" />
-                    </div>
-                    <ArrowUpRight className={`size-4 shrink-0 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${active ? 'text-rose-300' : 'text-slate-300'}`} />
+                  <span
+                    className={`flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black tabular-nums ${
+                      done ? 'bg-slate-100 text-slate-400' : 'bg-indigo-600 text-white'
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <Icon className={`size-4 shrink-0 ${done ? 'text-slate-300' : 'text-indigo-500'}`} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-bold text-slate-800">{t.label}</p>
+                    <p className="truncate text-[11.5px] font-medium text-slate-400">{t.hint}</p>
                   </div>
-                  <div className={`mt-2 text-[24px] font-black leading-none tabular-nums ${active ? 'text-rose-600' : 'text-slate-300'}`}>
-                    {a.count}
+                  <div className="shrink-0 text-right">
+                    {done ? (
+                      <span className="inline-flex items-center gap-1 text-[12px] font-bold text-emerald-600">
+                        <CheckCircle2 className="size-3.5" /> 対応不要
+                      </span>
+                    ) : (
+                      <span className="text-[18px] font-black tabular-nums text-rose-600">
+                        {t.count}
+                        <span className="ml-0.5 text-[11px] font-bold text-rose-400">{t.unit}</span>
+                      </span>
+                    )}
                   </div>
-                  <div className="mt-1 text-[12px] font-bold text-slate-600">{a.label}</div>
-                </Link>
+                  <Link
+                    to={t.to}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-[12px] font-bold transition-colors ${
+                      done
+                        ? 'bg-white text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50'
+                        : 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-700'
+                    }`}
+                  >
+                    {t.btn} <ArrowRight className="size-3.5" />
+                  </Link>
+                </div>
               );
             })}
           </div>
@@ -142,14 +195,14 @@ export default function DashboardPage() {
       )}
 
       {/* 当月サマリー */}
-      {canViewStats && (
+      {canViewAtt && (
         <section>
           <SectionHeader
             icon={CalendarClock}
             title={`当月のサマリー${facilityName && showStats ? `（${facilityName}）` : ''}`}
             right={
               <Link to="/analytics" className="inline-flex items-center gap-1 text-[12px] font-bold text-indigo-600 hover:text-indigo-700">
-                分析を開く <ArrowUpRight className="size-3.5" />
+                分析を開く <ArrowRight className="size-3.5" />
               </Link>
             }
           />
@@ -161,7 +214,6 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* 通所 */}
               <div>
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">通所</p>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -173,7 +225,6 @@ export default function DashboardPage() {
                   <StatTile icon={Activity} label="出席率" value={stats?.attendance.rate != null ? `${stats.attendance.rate}%` : '—'} tone="indigo" />
                 </div>
               </div>
-              {/* 食事・請求 */}
               <div>
                 <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">食事・請求</p>
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -188,8 +239,7 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* 権限が少ないユーザー向けのフォールバック */}
-      {alerts.length === 0 && !canViewStats && (
+      {tasks.length === 0 && !canViewAtt && (
         <div className="rounded-xl border border-[#ECEDF1] bg-white p-8 text-center">
           <p className="text-[13px] font-bold text-slate-500">左のメニューから操作を選んでください。</p>
         </div>
