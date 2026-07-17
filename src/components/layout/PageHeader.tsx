@@ -18,16 +18,14 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6 flex items-start justify-between gap-4">
-      <div className="min-w-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
         <div className="flex items-center gap-1.5 text-[14px] font-bold leading-none">
           <span className="font-semibold text-slate-400">{parent}</span>
           <span className="text-slate-300">/</span>
-          <span className="truncate text-slate-800">{title}</span>
+          <span className="text-slate-800">{title}</span>
         </div>
         {description && (
-          <p className="mt-2 text-[12px] font-medium text-slate-400">
-            {description}
-          </p>
+          <p className="text-[12px] font-medium text-slate-400">{description}</p>
         )}
       </div>
       {action && <div className="shrink-0">{action}</div>}
