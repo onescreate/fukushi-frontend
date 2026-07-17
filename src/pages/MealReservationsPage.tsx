@@ -38,7 +38,7 @@ function approvalBadge(m: MealWithUser) {
 export default function MealReservationsPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'meal.manage');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, isMulti, singleFacilityId } = useFacility();
   const { data: allUsers } = useUsersList();
 
   const now = new Date();
@@ -91,7 +91,7 @@ export default function MealReservationsPage() {
           </Button>
         </div>
 
-        {facilityId && !isAll && canManage && (
+        {singleFacilityId && canManage && (
           <Button
             className="ml-auto"
             onClick={() => {
@@ -112,7 +112,7 @@ export default function MealReservationsPage() {
               <TableRow>
                 <TableHead>利用日</TableHead>
                 <TableHead>利用者</TableHead>
-                {isAll && <TableHead>店舗</TableHead>}
+                {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead>状態</TableHead>
                 <TableHead>承認</TableHead>
                 <TableHead className="text-right">金額</TableHead>
@@ -121,13 +121,13 @@ export default function MealReservationsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isAll ? 6 : 5} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isMulti ? 6 : 5} className="py-10 text-center text-muted-foreground">
                     読み込み中…
                   </TableCell>
                 </TableRow>
               ) : (meals ?? []).length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAll ? 6 : 5} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isMulti ? 6 : 5} className="py-10 text-center text-muted-foreground">
                     この月の食事予約はありません。
                   </TableCell>
                 </TableRow>
@@ -137,9 +137,9 @@ export default function MealReservationsPage() {
                   return (
                     <TableRow
                       key={m.id}
-                      className={canManage && !isAll ? 'cursor-pointer' : ''}
+                      className={canManage && !!singleFacilityId ? 'cursor-pointer' : ''}
                       onClick={
-                        canManage && !isAll
+                        canManage && !!singleFacilityId
                           ? () => {
                               setEditing(m);
                               setDialogOpen(true);
@@ -149,7 +149,7 @@ export default function MealReservationsPage() {
                     >
                       <TableCell>{formatDate(m.mealDate)}</TableCell>
                       <TableCell className="font-medium text-foreground">{m.userName}</TableCell>
-                      {isAll && (
+                      {isMulti && (
                         <TableCell className="text-xs text-muted-foreground">
                           {m.facilityName ?? '—'}
                         </TableCell>

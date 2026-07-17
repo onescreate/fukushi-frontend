@@ -52,7 +52,7 @@ const todayStr = () => {
 export default function MealBillingPage() {
   const { data: me } = useMe();
   const canPay = hasPermission(me, 'billing.payment');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, isMulti, singleFacilityId } = useFacility();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -128,10 +128,10 @@ export default function MealBillingPage() {
   };
 
   // 請求書発行・月締めは店舗ごとの操作なので、全店舗表示中は無効
-  const canIssue = hasPermission(me, 'billing.issue') && !isAll;
-  const canClose = hasPermission(me, 'closing.manage') && !isAll;
+  const canIssue = hasPermission(me, 'billing.issue') && !!singleFacilityId;
+  const canClose = hasPermission(me, 'closing.manage') && !!singleFacilityId;
   const hasActions = canPay || canIssue;
-  const colCount = (hasActions ? 8 : 7) + (isAll ? 1 : 0);
+  const colCount = (hasActions ? 8 : 7) + (isMulti ? 1 : 0);
 
   const closeMonth = useBillingClose(false);
   const reopenMonth = useBillingClose(true);
@@ -233,7 +233,7 @@ export default function MealBillingPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>利用者</TableHead>
-                {isAll && <TableHead>店舗</TableHead>}
+                {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead className="text-right">食事(数)</TableHead>
                 <TableHead className="text-right">食事料金</TableHead>
                 <TableHead className="text-right">キャンセル料</TableHead>
@@ -269,7 +269,7 @@ export default function MealBillingPage() {
                         <span className="ml-2 text-xs text-muted-foreground">（{r.note}）</span>
                       )}
                     </TableCell>
-                    {isAll && (
+                    {isMulti && (
                       <TableCell className="text-xs text-muted-foreground">
                         {r.facilityName ?? '—'}
                       </TableCell>

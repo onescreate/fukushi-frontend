@@ -22,7 +22,7 @@ import { getApiErrorMessage } from '../lib/errors';
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function MealDeliveryPage() {
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, singleFacilityId } = useFacility();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -51,7 +51,7 @@ export default function MealDeliveryPage() {
   ];
 
   const openDay = (ds: string) => {
-    if (isAll) return; // 全店舗表示中は入力不可（店舗を選択して入力）
+    if (!singleFacilityId) return; // 全店舗表示中は入力不可（店舗を選択して入力）
     const day = data?.days[ds];
     setEditDate(ds);
     setCountInput(
@@ -113,9 +113,9 @@ export default function MealDeliveryPage() {
         )}
       </div>
 
-      {isAll && (
+      {!singleFacilityId && (
         <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
-          全店舗の合計を表示しています（発注・納品の合算・閲覧のみ）。納品数を入力するにはヘッダーで店舗を選択してください。
+          複数店舗の合計を表示しています（発注・納品の合算・閲覧のみ）。納品数を入力するにはヘッダーで店舗を1つ選択してください。
         </div>
       )}
 

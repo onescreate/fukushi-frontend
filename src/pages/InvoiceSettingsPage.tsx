@@ -25,8 +25,8 @@ import { formatDate } from '../lib/format';
 import { getApiErrorMessage } from '../lib/errors';
 
 export default function InvoiceSettingsPage() {
-  const { facilityId, isAll } = useFacility();
-  const { data: settings, isLoading } = useInvoiceSettings(isAll ? '' : facilityId);
+  const { facilityId, singleFacilityId } = useFacility();
+  const { data: settings, isLoading } = useInvoiceSettings(singleFacilityId ?? '');
   const del = useDeleteInvoiceSetting();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function InvoiceSettingsPage() {
     }
   };
 
-  if (isAll) return <SelectStorePrompt title="請求書 発行者情報" />;
+  if (!singleFacilityId) return <SelectStorePrompt title="請求書 発行者情報" />;
 
   return (
     <div>

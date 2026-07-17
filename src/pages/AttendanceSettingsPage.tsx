@@ -23,9 +23,9 @@ import { getApiErrorMessage } from '../lib/errors';
 export default function AttendanceSettingsPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, singleFacilityId } = useFacility();
 
-  const { data: settings } = useAttendanceSettings(isAll ? '' : facilityId);
+  const { data: settings } = useAttendanceSettings(singleFacilityId ?? '');
   const update = useUpdateAttendanceSettings();
 
   const [late, setLate] = useState('0');
@@ -51,7 +51,7 @@ export default function AttendanceSettingsPage() {
     }
   };
 
-  if (isAll) return <SelectStorePrompt title="打刻設定" />;
+  if (!singleFacilityId) return <SelectStorePrompt title="打刻設定" />;
 
   return (
     <div>

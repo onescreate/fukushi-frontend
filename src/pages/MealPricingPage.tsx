@@ -29,9 +29,9 @@ import { getApiErrorMessage } from '../lib/errors';
 export default function MealPricingPage() {
   const { data: me } = useMe();
   const canManage = hasPermission(me, 'settings.price');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, singleFacilityId } = useFacility();
 
-  const { data: pricings, isLoading } = useMealPricings(isAll ? '' : facilityId);
+  const { data: pricings, isLoading } = useMealPricings(singleFacilityId ?? '');
   const del = useDeleteMealPricing();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -58,7 +58,7 @@ export default function MealPricingPage() {
     }
   };
 
-  if (isAll) return <SelectStorePrompt title="食事料金" />;
+  if (!singleFacilityId) return <SelectStorePrompt title="食事料金" />;
 
   return (
     <div>

@@ -48,7 +48,7 @@ function bmiLabel(bmi: number | null) {
 export default function HealthRecordsPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'health.edit');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, isMulti } = useFacility();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -108,7 +108,7 @@ export default function HealthRecordsPage() {
     setYear(y);
   };
 
-  const colCount = 6 + (isAll ? 1 : 0) + (canEdit ? 1 : 0);
+  const colCount = 6 + (isMulti ? 1 : 0) + (canEdit ? 1 : 0);
 
   return (
     <div>
@@ -135,7 +135,7 @@ export default function HealthRecordsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>利用者</TableHead>
-                {isAll && <TableHead>店舗</TableHead>}
+                {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead className="text-right">身長(cm)</TableHead>
                 <TableHead className="text-right">体重(kg)</TableHead>
                 <TableHead>BMI</TableHead>
@@ -164,7 +164,7 @@ export default function HealthRecordsPage() {
                   return (
                     <TableRow key={r.userId} className={notEntered ? 'bg-amber-50/40' : ''}>
                       <TableCell className="font-medium text-foreground">{r.userName}</TableCell>
-                      {isAll && (
+                      {isMulti && (
                         <TableCell className="text-xs text-muted-foreground">
                           {r.facilityName ?? '—'}
                         </TableCell>

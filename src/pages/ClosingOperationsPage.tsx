@@ -40,7 +40,7 @@ function Check({ on }: { on: boolean }) {
 }
 
 export default function ClosingOperationsPage() {
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, isMulti, singleFacilityId } = useFacility();
   const now = new Date();
   const [date, setDate] = useState(
     `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
@@ -50,7 +50,7 @@ export default function ClosingOperationsPage() {
   const save = useSaveClosingOperation();
 
   const toggle = async (r: ClosingRow, key: ClosingFlag) => {
-    if (isAll) return; // 全店舗表示中は入力不可
+    if (!singleFacilityId) return; // 単一店舗選択時のみ入力可
     try {
       await save.mutateAsync({
         userId: r.userId,
@@ -87,9 +87,9 @@ export default function ClosingOperationsPage() {
           )}
         </div>
 
-        {isAll && (
+        {!singleFacilityId && (
           <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
-            全店舗の実績を表示しています（閲覧のみ）。加算を入力するにはヘッダーで店舗を選択してください。
+            複数店舗の実績を表示しています（閲覧のみ）。加算を入力するにはヘッダーで店舗を1つ選択してください。
           </div>
         )}
       </div>
@@ -103,7 +103,7 @@ export default function ClosingOperationsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>名前</TableHead>
-                {isAll && <TableHead>店舗</TableHead>}
+                {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead>予定時間</TableHead>
                 <TableHead>打刻時間</TableHead>
                 <TableHead className="text-center">食事提供</TableHead>
@@ -117,13 +117,13 @@ export default function ClosingOperationsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isAll ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isMulti ? 8 : 7} className="py-10 text-center text-muted-foreground">
                     読み込み中…
                   </TableCell>
                 </TableRow>
               ) : rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAll ? 8 : 7} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={isMulti ? 8 : 7} className="py-10 text-center text-muted-foreground">
                     この日の通所予定者はいません。
                   </TableCell>
                 </TableRow>
@@ -131,7 +131,7 @@ export default function ClosingOperationsPage() {
                 rows.map((r) => (
                   <TableRow key={r.userId}>
                     <TableCell className="font-medium text-foreground">{r.userName}</TableCell>
-                    {isAll && (
+                    {isMulti && (
                       <TableCell className="text-xs text-muted-foreground">{r.facilityName ?? '—'}</TableCell>
                     )}
                     <TableCell className="font-mono text-xs text-muted-foreground">
@@ -157,10 +157,10 @@ export default function ClosingOperationsPage() {
                       <TableCell key={f.key} className="text-center">
                         <button
                           type="button"
-                          disabled={isAll || save.isPending}
+                          disabled={!singleFacilityId || save.isPending}
                           onClick={() => toggle(r, f.key)}
                           className="disabled:cursor-default"
-                          title={isAll ? '' : 'クリックで切替'}
+                          title={!singleFacilityId ? '' : 'クリックで切替'}
                         >
                           <Check on={r[f.key]} />
                         </button>

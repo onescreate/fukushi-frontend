@@ -20,7 +20,7 @@ import {
 import { useMe, hasPermission } from '../features/auth/useMe';
 import { PageHeader } from '../components/layout/PageHeader';
 import { SectionHeader } from '../components/layout/SectionHeader';
-import { ALL_FACILITIES, useFacility } from '../contexts/FacilityContext';
+import { useFacility } from '../contexts/FacilityContext';
 import { useBadges } from '../features/stats/api';
 import { usePendingCount } from '../features/schedules/approvalApi';
 import { usePendingMealCount } from '../features/meals/reservationApi';
@@ -61,7 +61,7 @@ function CountTile({ icon: Icon, label, value, tone }: {
 export default function DashboardPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
-  const { facilityId, setFacilityId, facilities, isAll } = useFacility();
+  const { facilityId, isMulti } = useFacility();
   const now = new Date();
   const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
@@ -82,9 +82,9 @@ export default function DashboardPage() {
     { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: healthMissing?.count ?? 0, show: hasPermission(me, 'health.view') },
   ].filter((a) => a.show);
 
-  // ---- 今日の来所（特定店舗） ----
+  // ---- 今日の来所（選択中の店舗・複数可） ----
   const canViewAtt = hasPermission(me, 'attendance.view');
-  const rosterFacility = canViewAtt && !isAll ? facilityId : '';
+  const rosterFacility = canViewAtt ? facilityId : '';
   const { data: rows } = useRoster(rosterFacility, today);
   const list = rows ?? [];
   const present = list.filter((r) => r.status === 'present');
@@ -103,29 +103,11 @@ export default function DashboardPage() {
     }
   };
 
-  // 店舗ドロップダウン（ダッシュボード右上）
-  const facilityDropdown = facilities.length > 0 && (
-    <div className="flex items-center gap-1.5">
-      <Store className="size-4 text-slate-400" />
-      <select
-        value={facilityId || ''}
-        onChange={(e) => setFacilityId(e.target.value)}
-        className="h-9 rounded-lg border border-[#E3E4EA] bg-white px-3 text-[13px] font-bold text-slate-800 outline-none transition-colors hover:border-[#D3D4DC] focus:border-indigo-400"
-      >
-        {facilities.length > 1 && <option value={ALL_FACILITIES}>全店舗</option>}
-        {facilities.map((f) => (
-          <option key={f.id} value={f.id}>{f.name}</option>
-        ))}
-      </select>
-    </div>
-  );
-
   return (
     <div className="space-y-8">
       <PageHeader
         title="ダッシュボード"
         description={`ようこそ、${me?.name ?? ''} さん`}
-        action={facilityDropdown || undefined}
       />
 
       {/* 要対応 */}
@@ -162,20 +144,12 @@ export default function DashboardPage() {
       {/* 今日の来所 */}
       {canViewAtt && (
         <section>
-          <SectionHeader
-            icon={Users}
-            title="今日の来所"
-            right={
-              <Link to="/roster" className="inline-flex items-center gap-1 text-[12px] font-bold text-indigo-600 hover:text-indigo-700">
-                ロースターを開く <ArrowUpRight className="size-3.5" />
-              </Link>
-            }
-          />
+          <SectionHeader icon={Users} title="今日の来所" />
           {!rosterFacility ? (
             <div className="rounded-xl border border-[#ECEDF1] bg-white p-8 text-center">
               <Store className="mx-auto size-8 text-slate-300" />
               <p className="mt-2 text-[13px] font-bold text-slate-500">店舗を選ぶと今日の来所状況を表示します</p>
-              <p className="mt-1 text-[12px] font-medium text-slate-400">右上の店舗ドロップダウンから選択してください。</p>
+              <p className="mt-1 text-[12px] font-medium text-slate-400">ヘッダー右上の店舗切替から選択してください。</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -201,7 +175,12 @@ export default function DashboardPage() {
                     ) : (
                       present.map((r) => (
                         <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
-                          <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-bold text-slate-800">{r.name}</p>
+                            {isMulti && r.facilityName && (
+                              <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
+                            )}
+                          </div>
                           <span className="font-mono text-[12px] text-slate-500">
                             {r.clockIn ?? '—'}{r.clockIn || r.clockOut ? '〜' : ''}{r.clockOut ?? ''}
                           </span>
@@ -232,7 +211,12 @@ export default function DashboardPage() {
                         const ate = r.meal?.status === 'eaten';
                         return (
                           <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
-                            <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                            <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-bold text-slate-800">{r.name}</p>
+                            {isMulti && r.facilityName && (
+                              <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
+                            )}
+                          </div>
                             <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${ate ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'}`}>
                               {ate ? '喫食済' : '予約'}
                             </span>
@@ -265,7 +249,12 @@ export default function DashboardPage() {
                   <div className="divide-y divide-rose-100">
                     {lateEarly.map((r) => (
                       <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
-                        <span className="min-w-0 flex-1 truncate text-[13px] font-bold text-slate-800">{r.name}</span>
+                        <div className="min-w-0 flex-1">
+                            <p className="truncate text-[13px] font-bold text-slate-800">{r.name}</p>
+                            {isMulti && r.facilityName && (
+                              <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
+                            )}
+                          </div>
                         {r.isLate && <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">遅刻</span>}
                         {r.isEarlyLeave && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">早退</span>}
                         <span className="truncate text-[12px] font-medium text-slate-500">

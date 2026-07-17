@@ -24,8 +24,8 @@ const audienceCls: Record<string, string> = {
 };
 
 export default function AnnouncementsPage() {
-  const { facilityId, isAll } = useFacility();
-  const { data: items, isLoading } = useAnnouncements(isAll ? '' : facilityId);
+  const { facilityId, singleFacilityId } = useFacility();
+  const { data: items, isLoading } = useAnnouncements(singleFacilityId ?? '');
   const del = useDeleteAnnouncement();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -43,7 +43,7 @@ export default function AnnouncementsPage() {
     }
   };
 
-  if (isAll) return <SelectStorePrompt title="お知らせ" />;
+  if (!singleFacilityId) return <SelectStorePrompt title="お知らせ" />;
 
   return (
     <div>

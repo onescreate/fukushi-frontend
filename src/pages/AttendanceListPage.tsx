@@ -50,7 +50,7 @@ function StatusBadge({ status }: { status: AttendanceListRow['status'] }) {
 export default function AttendanceListPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'attendance.edit');
-  const { facilityId, isAll } = useFacility();
+  const { facilityId, isMulti } = useFacility();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -67,7 +67,7 @@ export default function AttendanceListPage() {
     setYear(y);
   };
 
-  const colCount = 6 + (isAll ? 1 : 0) + (canEdit ? 1 : 0);
+  const colCount = 6 + (isMulti ? 1 : 0) + (canEdit ? 1 : 0);
   const rows = data?.rows ?? [];
 
   return (
@@ -96,7 +96,7 @@ export default function AttendanceListPage() {
               <TableRow>
                 <TableHead>日付</TableHead>
                 <TableHead>利用者</TableHead>
-                {isAll && <TableHead>店舗</TableHead>}
+                {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead>予定</TableHead>
                 <TableHead>実績</TableHead>
                 <TableHead>状態</TableHead>
@@ -122,7 +122,7 @@ export default function AttendanceListPage() {
                   <TableRow key={r.key}>
                     <TableCell className="whitespace-nowrap text-sm">{formatDate(r.date)}</TableCell>
                     <TableCell className="font-medium text-foreground">{r.userName}</TableCell>
-                    {isAll && (
+                    {isMulti && (
                       <TableCell className="text-xs text-muted-foreground">{r.facilityName ?? '—'}</TableCell>
                     )}
                     <TableCell className="font-mono text-xs text-muted-foreground">

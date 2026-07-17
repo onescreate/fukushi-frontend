@@ -12,7 +12,6 @@ import {
   ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
-  ListChecks,
   Settings,
   Percent,
   Receipt,
@@ -79,7 +78,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: '毎日の運用',
     items: [
-      { label: '当日ロースター', to: '/roster', icon: ListChecks, permission: 'attendance.view' },
       { label: '予定承認', to: '/approvals', icon: CalendarCheck, permission: 'schedule.approve' },
       { label: '食事承認', to: '/meal-approvals', icon: ClipboardCheck, permission: 'meal.manage' },
       { label: 'お知らせ', to: '/announcements', icon: Megaphone, permission: 'announcement.manage' },

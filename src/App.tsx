@@ -13,7 +13,6 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import HelpPage from './pages/HelpPage';
 import SchedulesPage from './pages/SchedulesPage';
 import ApprovalsPage from './pages/ApprovalsPage';
-import RosterPage from './pages/RosterPage';
 import AttendanceListPage from './pages/AttendanceListPage';
 import AttendanceSettingsPage from './pages/AttendanceSettingsPage';
 import MealPricingPage from './pages/MealPricingPage';
@@ -148,14 +147,8 @@ export default function App() {
             </RequirePerm>
           }
         />
-        <Route
-          path="/roster"
-          element={
-            <RequirePerm perm="attendance.view">
-              <RosterPage />
-            </RequirePerm>
-          }
-        />
+        {/* 当日ロースターはダッシュボードに統合したためリダイレクト */}
+        <Route path="/roster" element={<Navigate to="/" replace />} />
         <Route
           path="/attendance-settings"
           element={
