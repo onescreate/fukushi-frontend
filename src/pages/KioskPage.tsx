@@ -28,6 +28,24 @@ type Stage = 'loading' | 'setup' | 'select' | 'pin' | 'clock' | 'result';
 
 const WEEKDAY = ['日', '月', '火', '水', '木', '金', '土'];
 
+// 開発プレビュー：端末設定・PIN無しでタブレット画面の見た目を確認（VITE_DEV_SCREENS=1）
+const DEV_PREVIEW = import.meta.env.VITE_DEV_SCREENS === '1';
+const MOCK_USERS = [
+  { id: 'dev-1', name: 'サンプル 太郎' },
+  { id: 'dev-2', name: 'サンプル 花子' },
+] as unknown as KioskUser[];
+const MOCK_BOARD = {
+  today: {
+    planIn: '09:00',
+    planOut: '16:00',
+    status: 'approved',
+    breaks: [],
+    meal: { status: 'reserved' },
+  },
+  alerts: { rejected: [], reasonNeeded: [] },
+  needsHealthInput: true,
+} as unknown as KioskBoard;
+
 /** 共通の白カード（画面全体をラップ）。再マウントを避けるためモジュール直下に定義。 */
 function Shell({ children }: { children: ReactNode }) {
   return (
@@ -58,6 +76,14 @@ export default function KioskPage() {
   const [reasonText, setReasonText] = useState('');
   const [result, setResult] = useState<ClockResult | null>(null);
   const [clock, setClock] = useState(new Date());
+  const [previewMode, setPreviewMode] = useState(false);
+
+  // 開発プレビュー：サンプルデータで打刻画面を表示（記録はしない）
+  const startDevPreview = () => {
+    setPreviewMode(true);
+    setUsers(MOCK_USERS);
+    setStage('select');
+  };
 
   // 時計を1秒ごとに更新
   useEffect(() => {
@@ -140,6 +166,13 @@ export default function KioskPage() {
 
   const pickUser = (u: KioskUser) => {
     setSelected(u);
+    if (previewMode) {
+      // プレビュー：PINを飛ばしてサンプルの打刻画面へ
+      setToday({ clockedIn: false, clockedOut: false } as TodayStatus);
+      setBoard(MOCK_BOARD);
+      setStage('clock');
+      return;
+    }
     setPin('');
     setStage('pin');
   };
@@ -169,6 +202,10 @@ export default function KioskPage() {
   };
 
   const doClock = async (type: 'in' | 'out') => {
+    if (previewMode) {
+      toast('プレビュー中は記録できません（デザイン確認用）');
+      return;
+    }
     setBusy(true);
     try {
       const res = await kioskClock(operationToken, type);
@@ -183,6 +220,10 @@ export default function KioskPage() {
   };
 
   const doMeal = async (eaten: boolean) => {
+    if (previewMode) {
+      toast('プレビュー中は記録できません（デザイン確認用）');
+      return;
+    }
     setBusy(true);
     try {
       await kioskMeal(operationToken, eaten);
@@ -197,6 +238,10 @@ export default function KioskPage() {
   };
 
   const doHealth = async () => {
+    if (previewMode) {
+      toast('プレビュー中は記録できません（デザイン確認用）');
+      return;
+    }
     const val = Number(kioskWeight);
     if (!(val > 0)) {
       toast.error('体重を入力してください');
@@ -253,6 +298,14 @@ export default function KioskPage() {
         >
           {busy ? '確認中…' : 'この端末を設定'}
         </button>
+        {DEV_PREVIEW && (
+          <button
+            onClick={startDevPreview}
+            className="mt-4 w-full rounded-xl border border-amber-300 bg-amber-50 py-3 text-sm font-bold text-amber-700 transition hover:bg-amber-100"
+          >
+            開発プレビュー（サンプルで表示・記録はしません）
+          </button>
+        )}
       </Shell>
     );
   }
