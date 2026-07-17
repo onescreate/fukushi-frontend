@@ -30,11 +30,13 @@ import UsersPage from './pages/masters/UsersPage';
 import DevicesPage from './pages/masters/DevicesPage';
 import { HubPage } from './pages/HubPage';
 import PortalShopsPage from './pages/PortalShopsPage';
+import { DevScreenSwitcher } from './components/DevScreenSwitcher';
 import { MASTERS_HUB, SETTINGS_HUB } from './app/nav';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       {/* タブレット（キオスク）: 認証不要の公開画面 */}
       <Route path="/kiosk" element={<KioskPage />} />
@@ -223,6 +225,8 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+      <DevScreenSwitcher />
+    </>
   );
 }
