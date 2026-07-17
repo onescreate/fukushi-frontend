@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { HelpCircle, LogOut, PanelLeft } from 'lucide-react';
+import { ChevronsLeft, HelpCircle, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
 import { usePendingCount } from '../../features/schedules/approvalApi';
@@ -130,13 +130,28 @@ export default function AppLayout() {
             collapsed ? 'w-14' : 'w-[224px]'
           }`}
         >
-          {/* ブランド＝システム切替（KGI踏襲） */}
+          {/* ブランド＝システム切替（KGI踏襲）＋折りたたみボタン */}
           <div
-            className={`flex min-h-[52px] shrink-0 items-center border-b border-white/[0.06] ${
-              collapsed ? 'px-1.5' : 'px-2'
+            className={`flex min-h-[52px] shrink-0 items-center gap-1 border-b border-white/[0.06] ${
+              collapsed ? 'justify-center px-1.5' : 'px-2'
             }`}
           >
-            <SystemSwitcher collapsed={collapsed} />
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <SystemSwitcher collapsed={false} />
+              </div>
+            )}
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              title={collapsed ? 'サイドバーを開く' : 'サイドバーを折りたたむ'}
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg text-[#8A8B98] transition-colors hover:bg-white/[0.06] hover:text-white"
+            >
+              {collapsed ? (
+                <Menu className="size-[18px]" />
+              ) : (
+                <ChevronsLeft className="size-[18px]" />
+              )}
+            </button>
           </div>
 
           {/* ナビ（グループ化） */}
@@ -210,14 +225,7 @@ export default function AppLayout() {
 
         {/* 本体（ヘッダー＋メイン） */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-white/[0.06] bg-[#14141C] px-4 shadow-sm">
-            <button
-              onClick={() => setCollapsed((v) => !v)}
-              title={collapsed ? 'サイドバーを開く' : 'サイドバーを折りたたむ'}
-              className="flex size-8 items-center justify-center rounded-lg text-[#8A8B98] transition-colors hover:bg-indigo-500/20 hover:text-indigo-200"
-            >
-              <PanelLeft className="size-4" />
-            </button>
+          <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-white/[0.06] bg-[#14141C] px-6 shadow-sm">
             <h1 className="text-[14px] font-bold tracking-wide text-white">
               {current?.label ?? ''}
             </h1>
