@@ -105,19 +105,12 @@ export default function PersonalMealPage() {
   ];
 
   return (
-    <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-bold text-slate-800">食事の注文</h1>
-        <p className="text-sm text-slate-500">
-          通所予定がある日に食事を予約できます。日付を選んで「予約」または「取消」してください。
-        </p>
-      </div>
-
-      <div className="mb-3 flex items-center justify-center gap-2">
+    <div className="space-y-4 pb-24">
+      <div className="flex items-center justify-center gap-3">
         <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
           <ChevronLeft className="size-4" />
         </Button>
-        <span className="w-28 text-center text-sm font-semibold">
+        <span className="w-28 text-center text-base font-bold text-slate-800">
           {year}年 {month}月
         </span>
         <Button variant="outline" size="icon-sm" onClick={() => changeMonth(1)}>
@@ -125,7 +118,7 @@ export default function PersonalMealPage() {
         </Button>
       </div>
 
-      <Card className="p-3">
+      <Card className="p-2 sm:p-3">
         <div className="mb-1 grid grid-cols-7">
           {WEEK.map((w, i) => (
             <div
@@ -138,7 +131,7 @@ export default function PersonalMealPage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
           {cells.map((day, idx) => {
             if (day === null) return <div key={`e${idx}`} />;
             const ds = `${year}-${pad(month)}-${pad(day)}`;
@@ -151,17 +144,19 @@ export default function PersonalMealPage() {
                 key={ds}
                 disabled={!selectable}
                 onClick={() => toggle(ds)}
-                className={`flex min-h-16 flex-col rounded-md border p-1.5 text-left transition-colors ${
+                className={`flex min-h-14 flex-col rounded-lg border p-1 text-left transition-colors sm:min-h-16 sm:p-1.5 ${
                   !selectable
                     ? 'cursor-not-allowed border-transparent bg-slate-50 text-slate-300'
                     : isSel
                       ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-400'
-                      : 'hover:border-primary/40 hover:bg-accent/40'
+                      : 'border-slate-200 active:bg-slate-50'
                 }`}
               >
-                <span className="text-xs font-medium">{day}</span>
+                <span className="text-xs font-bold">{day}</span>
                 {badge && (
-                  <span className={`mt-1 rounded px-1 py-0.5 text-[10px] font-medium ${badge.cls}`}>
+                  <span
+                    className={`mt-0.5 rounded px-1 py-0.5 text-center text-[9px] font-bold leading-tight sm:text-[10px] ${badge.cls}`}
+                  >
                     {badge.text}
                   </span>
                 )}
@@ -171,29 +166,32 @@ export default function PersonalMealPage() {
         </div>
       </Card>
 
-      <div className="mt-4 flex items-center gap-2">
-        <span className="text-sm text-slate-600">選択 {selected.size}日</span>
-        <div className="ml-auto flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handleSubmit('cancel')}
-            disabled={selected.size === 0 || submit.isPending}
-          >
-            取消
-          </Button>
-          <Button
-            onClick={() => handleSubmit('reserve')}
-            disabled={selected.size === 0 || submit.isPending}
-          >
-            予約
-          </Button>
-        </div>
-      </div>
+      <p className="text-center text-xs text-slate-400">
+        通所予定がある日だけ選べます。締切後や直前の取消は承認・キャンセル料が発生する場合があります。
+      </p>
 
-      <div className="mt-3 space-y-1 text-xs text-slate-400">
-        <p>・通所予定がない日（グレー）は選択できません。先に予定を申請してください。</p>
-        <p>・利用日まで日数が近い予約・取消は「申請」となり、施設の承認が必要です。</p>
-        <p>・締切（前日15時）を過ぎた日は変更できません。直前の取消はキャンセル料が発生する場合があります。</p>
+      {/* 予約/取消バー（画面下に固定） */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <span className="text-sm font-bold text-slate-600">選択 {selected.size}日</span>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => handleSubmit('cancel')}
+              disabled={selected.size === 0 || submit.isPending}
+              className="h-12 px-6"
+            >
+              取消
+            </Button>
+            <Button
+              onClick={() => handleSubmit('reserve')}
+              disabled={selected.size === 0 || submit.isPending}
+              className="h-12 px-8"
+            >
+              予約
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -31,19 +31,12 @@ export default function PersonalHistoryPage() {
   };
 
   return (
-    <div>
-      <div className="mb-4">
-        <h1 className="text-lg font-bold text-slate-800">通所の履歴</h1>
-        <p className="text-sm text-slate-500">
-          あなたの通所・欠席の記録を確認できます。
-        </p>
-      </div>
-
-      <div className="mb-3 flex items-center justify-center gap-2">
+    <div className="space-y-4">
+      <div className="flex items-center justify-center gap-3">
         <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
           <ChevronLeft className="size-4" />
         </Button>
-        <span className="w-28 text-center text-sm font-semibold">
+        <span className="w-28 text-center text-base font-bold text-slate-800">
           {year}年 {month}月
         </span>
         <Button variant="outline" size="icon-sm" onClick={() => changeMonth(1)}>

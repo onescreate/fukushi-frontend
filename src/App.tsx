@@ -8,6 +8,7 @@ import PersonalSchedulePage from './pages/personal/PersonalSchedulePage';
 import PersonalMealPage from './pages/personal/PersonalMealPage';
 import PersonalHistoryPage from './pages/personal/PersonalHistoryPage';
 import PersonalHealthPage from './pages/personal/PersonalHealthPage';
+import PersonalBillingPage from './pages/personal/PersonalBillingPage';
 import KioskPage from './pages/KioskPage';
 import DashboardPage from './pages/DashboardPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -51,6 +52,7 @@ export default function App() {
         <Route index element={<PersonalSchedulePage />} />
         <Route path="meals" element={<PersonalMealPage />} />
         <Route path="health" element={<PersonalHealthPage />} />
+        <Route path="billing" element={<PersonalBillingPage />} />
         <Route path="history" element={<PersonalHistoryPage />} />
       </Route>
 
