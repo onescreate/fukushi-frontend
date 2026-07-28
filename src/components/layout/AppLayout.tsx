@@ -70,6 +70,11 @@ export default function AppLayout() {
     ? (ROLE_LABEL[me.roles[0].role] ?? me.roles[0].role)
     : '';
 
+  // ポータルのタスク/カレンダー(埋め込み)は、枠・余白を作らずメイン領域いっぱいに表示する。
+  const isFullBleed = ['/portal-tasks', '/portal-calendar'].some((p) =>
+    location.pathname.startsWith(p),
+  );
+
   const renderItem = (item: NavItem) => {
     const Icon = item.icon;
     const badge = badgeCountFor(item.to);
@@ -247,10 +252,16 @@ export default function AppLayout() {
             </div>
           </header>
 
-          <main className="min-w-0 flex-1 overflow-y-auto bg-[#FBFBFC]">
-            <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[#FBFBFC]">
+            {isFullBleed ? (
               <Outlet />
-            </div>
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
+                  <Outlet />
+                </div>
+              </div>
+            )}
           </main>
         </div>
       </div>
