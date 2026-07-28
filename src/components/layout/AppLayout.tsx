@@ -3,10 +3,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { CalendarClock, ChevronsLeft, HelpCircle, ListTodo, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
-import { usePendingCount } from '../../features/schedules/approvalApi';
-import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { useBadges } from '../../features/stats/api';
-import { useHealthMissingCount } from '../../features/health/api';
 import { NAV_GROUPS, type NavItem } from '../../app/nav';
 
 // ヘッダーに常時表示する「ポータル連携」リンク（会計ポータルのタスク/カレンダーを窓表示するページへ）。
@@ -31,25 +28,21 @@ export default function AppLayout() {
   const { logout } = useAuth();
   const { data: me } = useMe();
   const location = useLocation();
-  const canApprove = hasPermission(me, 'schedule.approve');
-  const { data: pending } = usePendingCount(canApprove);
-  const pendingCount = pending?.count ?? 0;
-
-  const canApproveMeal = hasPermission(me, 'meal.manage');
-  const { data: mealPending } = usePendingMealCount(canApproveMeal);
-  const mealPendingCount = mealPending?.count ?? 0;
-
-  const canSeeBadges =
-    hasPermission(me, 'billing.view') || hasPermission(me, 'meal.delivery.manage');
-  const { data: badges } = useBadges(canSeeBadges);
-  const canViewHealth = hasPermission(me, 'health.view');
-  const { data: healthMissing } = useHealthMissingCount(canViewHealth);
+  // 通知バッジは1本のエンドポイント(/stats/badges)に集約（毎分4回のポーリング→1回）。各件数はサーバ側で権限判定。
+  const anyBadge =
+    hasPermission(me, 'schedule.approve') ||
+    hasPermission(me, 'meal.manage') ||
+    hasPermission(me, 'billing.view') ||
+    hasPermission(me, 'meal.delivery.manage') ||
+    hasPermission(me, 'health.view');
+  const { data: badges } = useBadges(anyBadge);
   const badgeCountFor = (to: string) => {
-    if (to === '/meal-billing') return badges?.unpaid ?? 0;
-    if (to === '/meal-deliveries') return badges?.deliveryMissing ?? 0;
-    if (to === '/health-records') return healthMissing?.count ?? 0;
-    if (to === '/approvals') return pendingCount;
-    if (to === '/meal-approvals') return mealPendingCount;
+    if (!badges) return 0;
+    if (to === '/meal-billing') return badges.unpaid;
+    if (to === '/meal-deliveries') return badges.deliveryMissing;
+    if (to === '/health-records') return badges.healthMissing;
+    if (to === '/approvals') return badges.pendingSchedule;
+    if (to === '/meal-approvals') return badges.pendingMeal;
     return 0;
   };
 

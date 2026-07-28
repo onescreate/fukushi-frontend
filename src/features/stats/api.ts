@@ -31,6 +31,9 @@ export interface FacilityStats {
 export interface Badges {
   unpaid: number;
   deliveryMissing: number;
+  pendingSchedule: number;
+  pendingMeal: number;
+  healthMissing: number;
 }
 
 export function useBadges(enabled = true) {

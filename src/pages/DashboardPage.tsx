@@ -22,9 +22,6 @@ import { PageHeader } from '../components/layout/PageHeader';
 import { SectionHeader } from '../components/layout/SectionHeader';
 import { useFacility } from '../contexts/FacilityContext';
 import { useBadges } from '../features/stats/api';
-import { usePendingCount } from '../features/schedules/approvalApi';
-import { usePendingMealCount } from '../features/meals/reservationApi';
-import { useHealthMissingCount } from '../features/health/api';
 import { useRoster, type RosterRow } from '../features/attendance/api';
 import { useAdminMealUpsert } from '../features/meals/reservationApi';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
@@ -67,19 +64,21 @@ export default function DashboardPage() {
 
   const [editing, setEditing] = useState<RosterRow | null>(null);
 
-  // ---- 要対応（グローバル） ----
-  const { data: pending } = usePendingCount(hasPermission(me, 'schedule.approve'));
-  const { data: mealPending } = usePendingMealCount(hasPermission(me, 'meal.manage'));
-  const canSeeBadges =
-    hasPermission(me, 'billing.view') || hasPermission(me, 'meal.delivery.manage');
-  const { data: badges } = useBadges(canSeeBadges);
-  const { data: healthMissing } = useHealthMissingCount(hasPermission(me, 'health.view'));
+  // ---- 要対応（グローバル）: バッジは1本のエンドポイント(/stats/badges)に集約 ----
+  const canApprove = hasPermission(me, 'schedule.approve');
+  const canApproveMeal = hasPermission(me, 'meal.manage');
+  const canSeeBilling = hasPermission(me, 'billing.view');
+  const canSeeDelivery = hasPermission(me, 'meal.delivery.manage');
+  const canSeeHealth = hasPermission(me, 'health.view');
+  const { data: badges } = useBadges(
+    canApprove || canApproveMeal || canSeeBilling || canSeeDelivery || canSeeHealth,
+  );
   const alerts = [
-    { label: '承認待ちの予定', to: '/approvals', icon: CalendarCheck, count: pending?.count ?? 0, show: hasPermission(me, 'schedule.approve') },
-    { label: '承認待ちの食事', to: '/meal-approvals', icon: ClipboardCheck, count: mealPending?.count ?? 0, show: hasPermission(me, 'meal.manage') },
-    { label: '未払いの請求', to: '/meal-billing', icon: Receipt, count: badges?.unpaid ?? 0, show: hasPermission(me, 'billing.view') },
-    { label: '納品の未入力', to: '/meal-deliveries', icon: Truck, count: badges?.deliveryMissing ?? 0, show: hasPermission(me, 'meal.delivery.manage') },
-    { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: healthMissing?.count ?? 0, show: hasPermission(me, 'health.view') },
+    { label: '承認待ちの予定', to: '/approvals', icon: CalendarCheck, count: badges?.pendingSchedule ?? 0, show: canApprove },
+    { label: '承認待ちの食事', to: '/meal-approvals', icon: ClipboardCheck, count: badges?.pendingMeal ?? 0, show: canApproveMeal },
+    { label: '未払いの請求', to: '/meal-billing', icon: Receipt, count: badges?.unpaid ?? 0, show: canSeeBilling },
+    { label: '納品の未入力', to: '/meal-deliveries', icon: Truck, count: badges?.deliveryMissing ?? 0, show: canSeeDelivery },
+    { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: badges?.healthMissing ?? 0, show: canSeeHealth },
   ].filter((a) => a.show);
 
   // ---- 今日の来所（選択中の店舗・複数可） ----
