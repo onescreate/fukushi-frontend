@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,21 +46,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function AnalyticsPage() {
   const { facilityId } = useFacility();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const { data } = useFacilityStats(facilityId, year, month);
   const { data: notices } = useStaffAnnouncements(facilityId);
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  };
 
   const att = data?.attendance;
   const rate = att?.rate ?? null;

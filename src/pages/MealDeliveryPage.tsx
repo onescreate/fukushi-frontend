@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -23,9 +24,7 @@ const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function MealDeliveryPage() {
   const { facilityId, singleFacilityId } = useFacility();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const { data } = useMealDeliveries(facilityId, year, month);
   const setDelivery = useSetDelivery();
@@ -34,14 +33,6 @@ export default function MealDeliveryPage() {
   const [countInput, setCountInput] = useState('');
   const [noteInput, setNoteInput] = useState('');
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  };
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstWeekday = new Date(year, month - 1, 1).getDay();

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -17,9 +18,7 @@ const KIND_LABEL: Record<ReasonKind, string> = {
 };
 
 export default function PersonalSchedulePage() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
   const [dayDialog, setDayDialog] = useState<{
     date: string;
     existing: Schedule | null;
@@ -43,19 +42,6 @@ export default function PersonalSchedulePage() {
     return map;
   }, [schedules]);
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) {
-      m = 12;
-      y -= 1;
-    } else if (m > 12) {
-      m = 1;
-      y += 1;
-    }
-    setMonth(m);
-    setYear(y);
-  };
 
   const cells: (number | null)[] = [
     ...Array.from({ length: firstWeekday }, () => null),

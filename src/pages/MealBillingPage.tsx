@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import {
   ChevronLeft,
   ChevronRight,
@@ -54,9 +55,7 @@ export default function MealBillingPage() {
   const canPay = hasPermission(me, 'billing.payment');
   const { facilityId, isMulti, singleFacilityId } = useFacility();
 
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const { data, isLoading } = useMealBilling(facilityId, year, month);
   const setPayment = useSetPayment();
@@ -79,14 +78,6 @@ export default function MealBillingPage() {
     };
   }, [data]);
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  };
 
   const openPay = (row: BillingRow) => {
     setPayTarget(row);

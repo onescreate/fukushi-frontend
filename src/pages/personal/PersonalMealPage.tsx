@@ -1,5 +1,6 @@
 import { pad } from '@/lib/format';
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -29,9 +30,8 @@ function mealBadge(meal: Meal | undefined) {
 }
 
 export default function PersonalMealPage() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const nav = useMonthNav();
+  const { year, month } = nav;
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const daysInMonth = new Date(year, month, 0).getDate();
@@ -59,12 +59,7 @@ export default function PersonalMealPage() {
   }, [meals]);
 
   const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
+    nav.changeMonth(delta);
     setSelected(new Set());
   };
 

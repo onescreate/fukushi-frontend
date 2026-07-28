@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -41,9 +42,7 @@ export default function MealReservationsPage() {
   const { facilityId, isMulti, singleFacilityId } = useFacility();
   const { data: allUsers } = useUsersList();
 
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const from = `${year}-${pad(month)}-01`;
@@ -62,14 +61,6 @@ export default function MealReservationsPage() {
     [allUsers, facilityId],
   );
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  };
 
   return (
     <div>

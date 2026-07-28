@@ -1,5 +1,5 @@
 import { pad } from '@/lib/format';
-import { useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -7,28 +7,13 @@ import { useMyAttendance } from '../../features/attendance/myApi';
 
 
 export default function PersonalHistoryPage() {
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const daysInMonth = new Date(year, month, 0).getDate();
   const from = `${year}-${pad(month)}-01`;
   const to = `${year}-${pad(month)}-${pad(daysInMonth)}`;
   const { data, isLoading } = useMyAttendance(from, to);
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) {
-      m = 12;
-      y -= 1;
-    } else if (m > 12) {
-      m = 1;
-      y += 1;
-    }
-    setMonth(m);
-    setYear(y);
-  };
 
   return (
     <div className="space-y-4">

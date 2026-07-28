@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../components/layout/PageHeader';
@@ -49,9 +50,7 @@ export default function HealthRecordsPage() {
   const { data: me } = useMe();
   const canEdit = hasPermission(me, 'health.edit');
   const { facilityId, isMulti } = useFacility();
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1);
+  const { year, month, changeMonth } = useMonthNav();
 
   const { data, isLoading } = useHealthRecords(facilityId, year, month);
   const upsert = useUpsertHealthRecord();
@@ -99,14 +98,6 @@ export default function HealthRecordsPage() {
     }
   };
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) { m = 12; y -= 1; }
-    else if (m > 12) { m = 1; y += 1; }
-    setMonth(m);
-    setYear(y);
-  };
 
   const colCount = 6 + (isMulti ? 1 : 0) + (canEdit ? 1 : 0);
 

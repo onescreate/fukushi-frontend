@@ -1,5 +1,6 @@
 import { pad } from '@/lib/format';
 import { useMemo, useState } from 'react';
+import { useMonthNav } from '@/hooks/useMonthNav';
 import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -23,10 +24,8 @@ const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 
 export default function SchedulesPage() {
   const { data: users } = useUsersList();
-  const now = new Date();
   const [userId, setUserId] = useState('');
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1); // 1-12
+  const { year, month, changeMonth } = useMonthNav();
 
   const [dayDialog, setDayDialog] = useState<{
     date: string;
@@ -47,19 +46,6 @@ export default function SchedulesPage() {
     return map;
   }, [schedules]);
 
-  const changeMonth = (delta: number) => {
-    let m = month + delta;
-    let y = year;
-    if (m < 1) {
-      m = 12;
-      y -= 1;
-    } else if (m > 12) {
-      m = 1;
-      y += 1;
-    }
-    setMonth(m);
-    setYear(y);
-  };
 
   const cells: (number | null)[] = [
     ...Array.from({ length: firstWeekday }, () => null),
