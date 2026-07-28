@@ -18,7 +18,7 @@ const KIND_LABEL: Record<ReasonKind, string> = {
 };
 
 export default function PersonalSchedulePage() {
-  const { year, month, changeMonth } = useMonthNav();
+  const { year, month, changeMonth, setYearMonth } = useMonthNav();
   const [dayDialog, setDayDialog] = useState<{
     date: string;
     existing: Schedule | null;
@@ -49,6 +49,11 @@ export default function PersonalSchedulePage() {
   ];
 
   const reasonNeeded = alerts?.reasonNeeded ?? [];
+  const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD（ローカル）
+  const goToday = () => {
+    const now = new Date();
+    setYearMonth(now.getFullYear(), now.getMonth() + 1);
+  };
 
   return (
     <div className="space-y-4">
@@ -95,26 +100,48 @@ export default function PersonalSchedulePage() {
         </Card>
       ))}
 
-      {/* 月切替 */}
-      <div className="flex items-center justify-center gap-3">
-        <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
-          <ChevronLeft className="size-4" />
-        </Button>
-        <span className="w-28 text-center text-base font-bold text-slate-800">
-          {year}年 {month}月
-        </span>
-        <Button variant="outline" size="icon-sm" onClick={() => changeMonth(1)}>
-          <ChevronRight className="size-4" />
-        </Button>
-      </div>
-
       {/* カレンダー */}
-      <Card className="p-2 sm:p-3">
-        <div className="mb-1 grid grid-cols-7">
+      <Card className="overflow-hidden p-0">
+        {/* ヘッダー：月移動・今日・凡例 */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-3 py-2.5 sm:px-4">
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
+              <ChevronLeft className="size-4" />
+            </Button>
+            <span className="min-w-[6.5rem] text-center text-base font-bold text-slate-800">
+              {year}年 {month}月
+            </span>
+            <Button variant="outline" size="icon-sm" onClick={() => changeMonth(1)}>
+              <ChevronRight className="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={goToday}
+              className="ml-1 text-slate-500"
+            >
+              今日
+            </Button>
+          </div>
+          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-emerald-500" />通所
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-amber-500" />申請中
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="size-2 rounded-full bg-rose-500" />却下
+            </span>
+          </div>
+        </div>
+
+        {/* 曜日 */}
+        <div className="grid grid-cols-7 px-2 pt-2 sm:px-3">
           {WEEK.map((w, i) => (
             <div
               key={w}
-              className={`pb-2 text-center text-xs font-bold ${
+              className={`pb-1.5 text-center text-xs font-bold ${
                 i === 0 ? 'text-red-500' : i === 6 ? 'text-blue-500' : 'text-slate-400'
               }`}
             >
@@ -122,7 +149,9 @@ export default function PersonalSchedulePage() {
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+
+        {/* 日セル */}
+        <div className="grid grid-cols-7 gap-1 p-2 sm:gap-1.5 sm:p-3">
           {cells.map((day, idx) => {
             if (day === null) return <div key={`e${idx}`} />;
             const ds = `${year}-${pad(month)}-${pad(day)}`;
@@ -130,16 +159,34 @@ export default function PersonalSchedulePage() {
             const hasBreak = (sch?.details ?? []).some(
               (d) => d.eventType === 'break_out',
             );
+            const dow = idx % 7;
+            const isToday = ds === todayStr;
             return (
               <button
                 key={ds}
                 onClick={() => setDayDialog({ date: ds, existing: sch ?? null })}
-                className="flex min-h-14 flex-col rounded-lg border border-slate-200 p-1 text-left transition-colors active:bg-slate-50 sm:min-h-16 sm:p-1.5"
+                className={`flex min-h-16 flex-col rounded-lg border p-1.5 text-left transition-colors hover:border-indigo-300 active:bg-slate-50 sm:min-h-20 lg:min-h-24 ${
+                  isToday
+                    ? 'border-indigo-400 bg-indigo-50/50 ring-1 ring-indigo-200'
+                    : 'border-slate-200'
+                }`}
               >
-                <span className="text-xs font-bold text-slate-600">{day}</span>
+                <span
+                  className={`text-xs font-bold ${
+                    isToday
+                      ? 'text-indigo-600'
+                      : dow === 0
+                        ? 'text-red-500'
+                        : dow === 6
+                          ? 'text-blue-500'
+                          : 'text-slate-600'
+                  }`}
+                >
+                  {day}
+                </span>
                 {sch && (
                   <span
-                    className={`mt-0.5 rounded px-1 py-0.5 text-center text-[9px] font-bold leading-tight sm:text-[10px] ${
+                    className={`mt-1 rounded-md px-1 py-0.5 text-center text-[10px] font-bold leading-tight sm:text-[11px] ${
                       sch.status === 'approved'
                         ? 'bg-emerald-100 text-emerald-700'
                         : sch.status === 'pending'
@@ -155,7 +202,7 @@ export default function PersonalSchedulePage() {
                   </span>
                 )}
                 {hasBreak && (
-                  <span className="mt-0.5 text-center text-[9px] font-bold text-slate-400">
+                  <span className="mt-0.5 text-center text-[9px] font-bold text-slate-400 sm:text-[10px]">
                     中抜け
                   </span>
                 )}
