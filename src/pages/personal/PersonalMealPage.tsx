@@ -165,9 +165,9 @@ export default function PersonalMealPage() {
         通所予定がある日だけ選べます。締切後や直前の取消は承認・キャンセル料が発生する場合があります。
       </p>
 
-      {/* 予約/取消バー（画面下に固定） */}
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
+      {/* 予約/取消バー（下タブバーの上に固定） */}
+      <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:bottom-0">
+        <div className="mx-auto flex max-w-5xl items-center gap-3">
           <span className="text-sm font-bold text-slate-600">選択 {selected.size}日</span>
           <div className="ml-auto flex gap-2">
             <Button

@@ -3,12 +3,17 @@ import { useMonthNav } from '@/hooks/useMonthNav';
 import { ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useMySchedules, useMyAlerts, type ReasonKind } from '../../features/schedules/myApi';
+import {
+  useMySchedules,
+  useMyAlerts,
+  type ReasonKind,
+} from '../../features/schedules/myApi';
 import type { Schedule } from '../../features/schedules/api';
 import { useMyAnnouncements } from '../../features/announcements/api';
 import { formatDate, pad } from '../../lib/format';
 import { PersonalSubmitDialog } from './PersonalSubmitDialog';
 import { PersonalReasonDialog } from './PersonalReasonDialog';
+import { PersonalBulkSubmitDialog } from './PersonalBulkSubmitDialog';
 
 const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
 const KIND_LABEL: Record<ReasonKind, string> = {
@@ -28,6 +33,11 @@ export default function PersonalSchedulePage() {
     kind: ReasonKind;
   } | null>(null);
 
+  // まとめて登録（複数日選択）
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDialog, setBulkDialog] = useState(false);
+
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstWeekday = new Date(year, month - 1, 1).getDay();
   const from = `${year}-${pad(month)}-01`;
@@ -42,7 +52,6 @@ export default function PersonalSchedulePage() {
     return map;
   }, [schedules]);
 
-
   const cells: (number | null)[] = [
     ...Array.from({ length: firstWeekday }, () => null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
@@ -55,8 +64,20 @@ export default function PersonalSchedulePage() {
     setYearMonth(now.getFullYear(), now.getMonth() + 1);
   };
 
+  const toggleSelect = (ds: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(ds)) next.delete(ds);
+      else next.add(ds);
+      return next;
+    });
+  const exitBulk = () => {
+    setBulkMode(false);
+    setSelected(new Set());
+  };
+
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${bulkMode ? 'pb-24' : ''}`}>
       {/* 理由入力アラート（欠席・遅刻・早退） */}
       {reasonNeeded.length > 0 && (
         <Card className="border-amber-200 bg-amber-50 p-3.5">
@@ -102,7 +123,7 @@ export default function PersonalSchedulePage() {
 
       {/* カレンダー */}
       <Card className="overflow-hidden p-0">
-        {/* ヘッダー：月移動・今日・凡例 */}
+        {/* ヘッダー：月移動・今日・まとめて登録・凡例 */}
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-slate-100 px-3 py-2.5 sm:px-4">
           <div className="flex items-center gap-1.5">
             <Button variant="outline" size="icon-sm" onClick={() => changeMonth(-1)}>
@@ -123,18 +144,30 @@ export default function PersonalSchedulePage() {
               今日
             </Button>
           </div>
-          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-500">
-            <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-emerald-500" />通所
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-amber-500" />申請中
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full bg-rose-500" />却下
-            </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={bulkMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => (bulkMode ? exitBulk() : setBulkMode(true))}
+            >
+              {bulkMode ? '選択をやめる' : 'まとめて登録'}
+            </Button>
+            <div className="hidden items-center gap-3 text-[11px] font-bold text-slate-500 sm:flex">
+              <span className="flex items-center gap-1">
+                <span className="size-2 rounded-full bg-emerald-500" />通所
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="size-2 rounded-full bg-amber-500" />申請中
+              </span>
+            </div>
           </div>
         </div>
+
+        {bulkMode && (
+          <div className="border-b border-indigo-100 bg-indigo-50/60 px-3 py-2 text-xs font-bold text-indigo-700 sm:px-4">
+            登録したい日をタップで選んでください。
+          </div>
+        )}
 
         {/* 曜日 */}
         <div className="grid grid-cols-7 px-2 pt-2 sm:px-3">
@@ -161,14 +194,21 @@ export default function PersonalSchedulePage() {
             );
             const dow = idx % 7;
             const isToday = ds === todayStr;
+            const isSel = bulkMode && selected.has(ds);
             return (
               <button
                 key={ds}
-                onClick={() => setDayDialog({ date: ds, existing: sch ?? null })}
+                onClick={() =>
+                  bulkMode
+                    ? toggleSelect(ds)
+                    : setDayDialog({ date: ds, existing: sch ?? null })
+                }
                 className={`flex min-h-16 flex-col rounded-lg border p-1.5 text-left transition-colors hover:border-indigo-300 active:bg-slate-50 sm:min-h-20 lg:min-h-24 ${
-                  isToday
-                    ? 'border-indigo-400 bg-indigo-50/50 ring-1 ring-indigo-200'
-                    : 'border-slate-200'
+                  isSel
+                    ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-400'
+                    : isToday
+                      ? 'border-indigo-400 bg-indigo-50/50 ring-1 ring-indigo-200'
+                      : 'border-slate-200'
                 }`}
               >
                 <span
@@ -212,6 +252,38 @@ export default function PersonalSchedulePage() {
         </div>
       </Card>
 
+      {/* まとめて登録バー（下タブの上に固定） */}
+      {bulkMode && (
+        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur md:bottom-0">
+          <div className="mx-auto flex max-w-5xl items-center gap-3">
+            <span className="text-sm font-bold text-slate-600">
+              選択 {selected.size}日
+            </span>
+            {selected.size > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="text-xs font-bold text-slate-400"
+              >
+                全解除
+              </button>
+            )}
+            <div className="ml-auto flex gap-2">
+              <Button variant="outline" onClick={exitBulk} className="h-12 px-5">
+                やめる
+              </Button>
+              <Button
+                onClick={() => setBulkDialog(true)}
+                disabled={selected.size === 0}
+                className="h-12 px-6"
+              >
+                登録する
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {dayDialog && (
         <PersonalSubmitDialog
           open={!!dayDialog}
@@ -226,6 +298,14 @@ export default function PersonalSchedulePage() {
           onOpenChange={(o) => !o && setReasonDialog(null)}
           date={reasonDialog.date}
           kind={reasonDialog.kind}
+        />
+      )}
+      {bulkDialog && (
+        <PersonalBulkSubmitDialog
+          open={bulkDialog}
+          onOpenChange={(o) => !o && setBulkDialog(false)}
+          dates={[...selected]}
+          onDone={exitBulk}
         />
       )}
     </div>

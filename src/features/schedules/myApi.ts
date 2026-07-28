@@ -44,6 +44,26 @@ export function useMySubmit() {
   });
 }
 
+/** 予定の一括申請（複数日にまとめて同じ通所時間を登録）。 */
+export function useMyBulkSubmit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      dates: string[];
+      planIn?: string;
+      planOut?: string;
+      note?: string;
+    }) =>
+      apiClient
+        .post<{ approved: number; pending: number }>(
+          '/my/schedules/bulk',
+          data,
+        )
+        .then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
 export type ReasonKind = 'absence' | 'late' | 'early';
 
 export interface MyAlerts {
