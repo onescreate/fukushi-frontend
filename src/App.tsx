@@ -32,6 +32,7 @@ import UsersPage from './pages/masters/UsersPage';
 import DevicesPage from './pages/masters/DevicesPage';
 import { HubPage } from './pages/HubPage';
 import PortalShopsPage from './pages/PortalShopsPage';
+import EmbeddedPage from './pages/EmbeddedPage';
 import { DevScreenSwitcher } from './components/DevScreenSwitcher';
 import { MASTERS_HUB, SETTINGS_HUB } from './app/nav';
 
@@ -225,6 +226,10 @@ export default function App() {
             </RequirePerm>
           }
         />
+        {/* ポータル連携：会計ポータルのタスク/カレンダーを窓（iframe）で表示。
+            認証・権限判定はポータル側(/embed/*)で行う（担当者の選択肢は福祉権限者に限定）。 */}
+        <Route path="/portal-tasks" element={<EmbeddedPage title="タスク" path="/embed/tasks" />} />
+        <Route path="/portal-calendar" element={<EmbeddedPage title="カレンダー" path="/embed/calendar" />} />
         <Route path="/help" element={<HelpPage />} />
       </Route>
 

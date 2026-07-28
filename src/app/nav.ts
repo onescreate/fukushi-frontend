@@ -7,9 +7,11 @@ import {
   FileText,
   Megaphone,
   CalendarCheck,
+  CalendarClock,
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
+  ListTodo,
   LayoutDashboard,
   Settings,
   Percent,
@@ -102,6 +104,15 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: '分析', to: '/analytics', icon: BarChart3, permission: 'attendance.view' },
       MASTERS_HUB,
       SETTINGS_HUB,
+    ],
+  },
+  {
+    // 会計ポータルのタスク/カレンダーを窓（iframe）で表示。権限判定はポータル側で行うため
+    // ここでは permission を付けず常に表示（入れない人には窓内で「権限がありません」が出る）。
+    title: 'ポータル連携',
+    items: [
+      { label: 'タスク', to: '/portal-tasks', icon: ListTodo },
+      { label: 'カレンダー', to: '/portal-calendar', icon: CalendarClock },
     ],
   },
 ];
