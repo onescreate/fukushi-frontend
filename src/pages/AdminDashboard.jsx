@@ -175,6 +175,14 @@ function AdminDashboard() {
               <button onClick={() => setActiveTab('closing')} className={`nav-item py-2.5 font-medium ${activeTab === 'closing' ? 'active' : ''}`}>締め業務</button>
             </div>
           </div>
+          {/* ポータル連携：会計ポータルのタスク/カレンダーを窓（iframe）で表示。中身の権限は各自のポータル権限に従う */}
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">Portal</p>
+            <div className="space-y-1">
+              <button onClick={() => setActiveTab('portalTasks')} className={`nav-item py-2.5 font-medium ${activeTab === 'portalTasks' ? 'active' : ''}`}>タスク</button>
+              <button onClick={() => setActiveTab('portalCalendar')} className={`nav-item py-2.5 font-medium ${activeTab === 'portalCalendar' ? 'active' : ''}`}>カレンダー</button>
+            </div>
+          </div>
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 border-b border-slate-700 pb-1">Operation</p>
             <div className="space-y-1">
@@ -253,8 +261,10 @@ function AdminDashboard() {
         <header className="bg-white/90 backdrop-blur-sm px-10 py-6 sticky top-0 z-10 flex justify-between items-end border-b border-slate-100">
           <div>
             <p className="text-sm font-bold text-slate-400 mb-1 tracking-wide">
-              {activeTab === 'daily' ? 'Main / Dashboard' : 
-               activeTab === 'applications' ? 'Operation / 予定表一覧' : 
+              {activeTab === 'daily' ? 'Main / Dashboard' :
+               activeTab === 'portalTasks' ? 'Portal / タスク' :
+               activeTab === 'portalCalendar' ? 'Portal / カレンダー' :
+               activeTab === 'applications' ? 'Operation / 予定表一覧' :
                activeTab === 'attendance' ? 'Operation / 打刻データ一覧' : 
                activeTab === 'meal' ? 'Operation / 食事注文リスト' : 
                activeTab === 'billing' ? 'Operation / 食事料金請求' : 
@@ -327,6 +337,22 @@ function AdminDashboard() {
           {activeTab === 'system' && <SystemSettingsTab selectedStoreId={selectedStoreId} />}
           {activeTab === 'store' && <StoreInfoTab adminRole={adminRole} />}
           {activeTab === 'adminMaster' && <AdminMasterTab adminRole={adminRole} />}
+
+          {/* ポータル連携：会計ポータルのタスク/カレンダーを窓（iframe）で表示。
+              中身はポータル(management.ones-create.net)側で認証・権限判定される。初回のみ窓内でポータルへログインが必要。 */}
+          {(activeTab === 'portalTasks' || activeTab === 'portalCalendar') && (
+            <div>
+              <p className="text-xs font-bold text-slate-400 mb-3">※ 初回のみ、下の画面内で会計ポータルへのログインが必要です（以後は自動でログイン状態が続きます）。</p>
+              <iframe
+                src={activeTab === 'portalTasks'
+                  ? 'https://management.ones-create.net/embed/tasks'
+                  : 'https://management.ones-create.net/embed/calendar'}
+                title={activeTab === 'portalTasks' ? 'タスク' : 'カレンダー'}
+                className="w-full rounded-2xl border border-slate-200 bg-white shadow-sm"
+                style={{ height: 'calc(100vh - 220px)', minHeight: '520px' }}
+              />
+            </div>
+          )}
         </div>
       </main>
     </div>
