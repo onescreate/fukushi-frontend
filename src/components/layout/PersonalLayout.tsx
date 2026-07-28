@@ -40,18 +40,13 @@ export default function PersonalLayout() {
       {/* ヘッダー（上部に固定） */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 text-sm font-bold text-white shadow-sm">
-              福
-            </div>
-            <div className="min-w-0 leading-tight">
-              <p className="truncate text-sm font-bold text-slate-800">
-                {me?.name ? `${me.name} さん` : '利用者ページ'}
-              </p>
-              <p className="text-[11px] font-medium text-slate-400">
-                就労支援 マイページ
-              </p>
-            </div>
+          <div className="min-w-0 leading-tight">
+            <p className="truncate text-[11px] font-medium text-slate-400">
+              {me?.facilityName ?? '就労支援 マイページ'}
+            </p>
+            <p className="truncate text-base font-bold text-slate-800">
+              {me?.name ? `${me.name} さん` : '利用者ページ'}
+            </p>
           </div>
           <Button
             variant="outline"
