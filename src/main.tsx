@@ -8,11 +8,14 @@ import { Toaster } from '@/components/ui/sonner';
 import App from './App';
 import './index.css';
 
+// Viteの base（/fukushi/）に合わせてルーターの基準パスを設定。開発(base=/)では '/'。
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={basename}>
           <App />
         </BrowserRouter>
         <Toaster richColors position="top-center" />

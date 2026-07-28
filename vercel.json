@@ -1,8 +1,13 @@
 {
+  "redirects": [
+    { "source": "/", "destination": "/fukushi", "permanent": false }
+  ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/fukushi/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/fukushi/favicon.svg", "destination": "/favicon.svg" },
+    { "source": "/fukushi/icon.png", "destination": "/icon.png" },
+    { "source": "/fukushi/manifest.json", "destination": "/manifest.json" },
+    { "source": "/fukushi", "destination": "/index.html" },
+    { "source": "/fukushi/(.*)", "destination": "/index.html" }
   ]
 }
