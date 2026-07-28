@@ -20,6 +20,8 @@ export function useMySchedules(from: string, to: string) {
 export interface MyBreak {
   plannedOut?: string;
   plannedIn?: string;
+  /** 用件（例「通院：精神科」）。任意。 */
+  note?: string;
 }
 
 export function useMySubmit() {
