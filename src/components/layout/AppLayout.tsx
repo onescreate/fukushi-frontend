@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { ChevronsLeft, HelpCircle, LogOut, Menu } from 'lucide-react';
+import { CalendarClock, ChevronsLeft, HelpCircle, ListTodo, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
 import { usePendingCount } from '../../features/schedules/approvalApi';
 import { usePendingMealCount } from '../../features/meals/reservationApi';
 import { useBadges } from '../../features/stats/api';
 import { useHealthMissingCount } from '../../features/health/api';
-import { NAV_GROUPS, ALL_DESTINATIONS, type NavItem } from '../../app/nav';
+import { NAV_GROUPS, type NavItem } from '../../app/nav';
+
+// ヘッダーに常時表示する「ポータル連携」リンク（会計ポータルのタスク/カレンダーを窓表示するページへ）。
+const HEADER_LINKS = [
+  { to: '/portal-tasks', label: 'タスク', icon: ListTodo },
+  { to: '/portal-calendar', label: 'カレンダー', icon: CalendarClock },
+] as const;
 import { FacilityProvider } from '../../contexts/FacilityContext';
 import { FacilitySwitcher } from './FacilitySwitcher';
 import { SystemSwitcher } from './SystemSwitcher';
@@ -59,14 +65,6 @@ export default function AppLayout() {
   // ハブは子のいずれかが見えれば表示
   const isVisible = (item: NavItem) =>
     item.children ? item.children.some(canSee) : canSee(item);
-
-  const current = [...ALL_DESTINATIONS]
-    .sort((a, b) => b.to.length - a.to.length)
-    .find((i) =>
-      i.to === '/'
-        ? location.pathname === '/'
-        : location.pathname.startsWith(i.to),
-    );
 
   const roleLabel = me?.roles?.[0]
     ? (ROLE_LABEL[me.roles[0].role] ?? me.roles[0].role)
@@ -226,9 +224,24 @@ export default function AppLayout() {
         {/* 本体（ヘッダー＋メイン） */}
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-[52px] shrink-0 items-center gap-3 border-b border-white/[0.06] bg-[#14141C] px-6 shadow-sm">
-            <h1 className="text-[14px] font-bold tracking-wide text-white">
-              {current?.label ?? ''}
-            </h1>
+            <nav className="flex items-center gap-1">
+              {HEADER_LINKS.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex h-8 items-center gap-1.5 rounded-lg px-3 text-[12.5px] font-semibold transition-colors ${
+                      isActive
+                        ? 'bg-indigo-500/25 text-white'
+                        : 'text-[#8A8B98] hover:bg-indigo-500/15 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="size-[16px]" strokeWidth={1.9} />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
             <div className="ml-auto">
               <FacilitySwitcher />
             </div>
