@@ -2,6 +2,8 @@ import { useLocation } from 'react-router-dom';
 
 // 開発中だけ表示：VITE_DEV_SCREENS=1 のときに 3画面を行き来できるフローティングバー。
 const SHOW = import.meta.env.VITE_DEV_SCREENS === '1';
+// /fukushi 配下で配信されるため、リンクにベースパスを前置する（付けないとポータル側へ遷移してしまう）。
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 const SCREENS: { label: string; path: string; match: (p: string) => boolean }[] = [
   {
@@ -27,7 +29,7 @@ export function DevScreenSwitcher() {
         return (
           <a
             key={s.path}
-            href={s.path}
+            href={`${BASE}${s.path}`}
             className={`rounded-full px-2.5 py-1 text-[11.5px] font-bold transition-colors ${
               active
                 ? 'bg-amber-500 text-white'
