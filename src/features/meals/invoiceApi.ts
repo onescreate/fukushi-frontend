@@ -60,6 +60,9 @@ export interface ResolvedIssuer {
   sealImage: string | null;
   remark: string | null;
   source: 'portal' | 'legacy' | 'none';
+  /** 未設定/一部欠落の理由（プレビュー診断用） */
+  reason?: string | null;
+  warnings?: string[];
 }
 
 /** 請求書に使う発行者情報（ポータル法人＋振込先＋社印＋上書きを解決）。 */
@@ -105,12 +108,19 @@ export function useInvoiceConfig(facilityId: string) {
   });
 }
 
+export interface CorpAccountsResult {
+  enabled: boolean;
+  linked?: boolean;
+  error?: boolean;
+  accounts: CorpAccount[];
+}
+
 export function useCorpAccounts(facilityId: string) {
-  return useQuery<{ enabled: boolean; accounts: CorpAccount[] }>({
+  return useQuery<CorpAccountsResult>({
     queryKey: ['invoice-accounts', facilityId],
     queryFn: async () =>
       (
-        await apiClient.get<{ enabled: boolean; accounts: CorpAccount[] }>(
+        await apiClient.get<CorpAccountsResult>(
           `/invoice-settings/${facilityId}/accounts`,
         )
       ).data,

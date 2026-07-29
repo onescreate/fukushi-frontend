@@ -28,6 +28,16 @@ const SOURCE_LABEL: Record<string, { text: string; cls: string }> = {
   none: { text: '未設定', cls: 'bg-rose-100 text-rose-600' },
 };
 
+// 「未設定」になった具体的な理由（診断メッセージ）。
+const REASON_MESSAGE: Record<string, string> = {
+  portal_disabled: 'ポータル連携が無効です（PORTAL_DATABASE_URL 未設定）。',
+  no_corp_link:
+    'この店舗の法人がポータルに紐付いていません。「事業所の設定」で店舗を福祉事業所として指定すると、法人が紐付きます。',
+  corp_query_error:
+    '法人情報の参照でエラーが発生しました。福祉DBに「corps」テーブルのSELECT権限があるか確認してください。',
+  corp_not_found: 'ポータルに該当する法人（corp）が見つかりませんでした。',
+};
+
 export default function InvoiceSettingsPage() {
   const { singleFacilityId } = useFacility();
   const facilityId = singleFacilityId ?? '';
@@ -139,9 +149,20 @@ export default function InvoiceSettingsPage() {
                 : '非表示'}
           </p>
         </div>
-        {issuer?.source === 'none' && (
+        {issuer && issuer.source === 'none' && (
           <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600">
-            発行者情報が取得できません。ポータルでこの店舗の法人（corp）が設定されているか確認してください。
+            {REASON_MESSAGE[issuer.reason ?? ''] ??
+              '発行者情報を取得できません。ポータルでこの店舗の法人（corp）が設定されているか確認してください。'}
+          </p>
+        )}
+        {issuer?.warnings?.includes('accounts') && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            振込先（口座）を取得できませんでした。福祉DBに「accounts」テーブルのSELECT権限が必要な可能性があります。
+          </p>
+        )}
+        {issuer?.warnings?.includes('seal') && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            社印を取得できませんでした。福祉DBに「ones_accounting_corp_seals」テーブルのSELECT権限が必要な可能性があります。
           </p>
         )}
       </Card>
@@ -153,6 +174,10 @@ export default function InvoiceSettingsPage() {
           <Label>振込先口座</Label>
           {accountsData && !accountsData.enabled ? (
             <p className="text-xs text-slate-400">ポータル連携が無効のため、口座を選べません。</p>
+          ) : accountsData && accountsData.linked === false ? (
+            <p className="text-xs text-amber-600">この店舗の法人がポータルに紐付いていません（事業所の設定で指定してください）。</p>
+          ) : accountsData?.error ? (
+            <p className="text-xs text-amber-600">口座の取得に失敗しました（accounts テーブルのSELECT権限が必要な可能性）。</p>
           ) : accounts.length === 0 ? (
             <p className="text-xs text-slate-400">この法人に登録された口座がありません（ポータルで登録してください）。</p>
           ) : (
