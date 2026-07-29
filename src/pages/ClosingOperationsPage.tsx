@@ -29,6 +29,12 @@ const FLAGS: { key: ClosingFlag; label: string }[] = [
   { key: 'absenceHandling', label: '欠席時対応' },
 ];
 
+/** "YYYY-MM-DD" を "YYYY年M月D日" に整形。 */
+function formatJDate(ds: string): string {
+  const [y, m, d] = ds.split('-').map(Number);
+  return `${y}年${m}月${d}日`;
+}
+
 function Check({ on }: { on: boolean }) {
   return on ? (
     <span className="inline-flex size-5 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
@@ -79,6 +85,9 @@ export default function ClosingOperationsPage() {
 
         <div className="mb-4 flex items-center gap-3">
           <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
+          <span className="text-sm font-bold text-slate-700">
+            当日通所人数 {data?.attendeeCount ?? 0} 人
+          </span>
           {rows.length > 0 && (
             <Button variant="outline" size="sm" className="ml-auto" onClick={() => window.print()}>
               <Printer className="mr-1.5 size-4" />
@@ -96,8 +105,11 @@ export default function ClosingOperationsPage() {
 
       {facilityId && (
         <Card className="overflow-hidden p-0 print-area">
-          <div className="hidden px-6 pt-4 text-center text-lg font-bold print:block">
-            実績記録（{date}）
+          <div className="hidden px-6 pt-4 print:block">
+            <div className="text-center text-lg font-bold">{formatJDate(date)}</div>
+            <div className="mt-0.5 text-center text-sm font-semibold">
+              当日通所人数 {data?.attendeeCount ?? 0} 人
+            </div>
           </div>
           <Table>
             <TableHeader>
@@ -124,13 +136,20 @@ export default function ClosingOperationsPage() {
               ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isMulti ? 8 : 7} className="py-10 text-center text-muted-foreground">
-                    この日の通所予定者はいません。
+                    この日の対象者（通所予定・打刻）はいません。
                   </TableCell>
                 </TableRow>
               ) : (
                 rows.map((r) => (
                   <TableRow key={r.userId}>
-                    <TableCell className="font-medium text-foreground">{r.userName}</TableCell>
+                    <TableCell className="font-medium text-foreground">
+                      {r.userName}
+                      {r.noSchedule && (
+                        <span className="ml-1.5 rounded bg-sky-100 px-1 py-0.5 text-[10px] font-bold text-sky-700">
+                          予定外
+                        </span>
+                      )}
+                    </TableCell>
                     {isMulti && (
                       <TableCell className="text-xs text-muted-foreground">{r.facilityName ?? '—'}</TableCell>
                     )}

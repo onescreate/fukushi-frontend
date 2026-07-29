@@ -10,6 +10,8 @@ export interface ClosingRow {
   actIn: string | null;
   actOut: string | null;
   isAbsent: boolean;
+  /** 通所予定なしで打刻あり（参考表示） */
+  noSchedule: boolean;
   mealProvided: boolean;
   regionalCooperation: boolean;
   transitionPrep: boolean;
@@ -20,6 +22,8 @@ export interface ClosingList {
   date: string;
   allMode: boolean;
   rows: ClosingRow[];
+  /** 当日通所人数（実際に打刻した人数） */
+  attendeeCount: number;
 }
 
 export type ClosingFlag =
