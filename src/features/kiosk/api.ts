@@ -49,14 +49,30 @@ export async function kioskClock(
 
 export type ReasonKind = 'absence' | 'late' | 'early';
 
+export interface KioskVisitBreak {
+  plannedOut: string | null;
+  plannedIn: string | null;
+}
+
+/** 次回の通所予定（退所打刻時に表示） */
+export interface KioskNextVisit {
+  date: string; // YYYY-MM-DD
+  planIn: string | null;
+  planOut: string | null;
+  breaks: KioskVisitBreak[];
+  practicePlace: string | null;
+  mealReserved: boolean;
+}
+
 export interface KioskBoard {
   today: {
     planIn: string | null;
     planOut: string | null;
     status: 'pending' | 'approved' | 'rejected' | null;
-    breaks: { plannedOut: string | null; plannedIn: string | null }[];
+    breaks: KioskVisitBreak[];
     meal: { status: string } | null;
   };
+  nextVisit: KioskNextVisit | null;
   alerts: {
     rejected: { date: string }[];
     reasonNeeded: { date: string; kind: ReasonKind }[];

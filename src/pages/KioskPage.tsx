@@ -28,6 +28,13 @@ type Stage = 'loading' | 'setup' | 'select' | 'pin' | 'clock' | 'result';
 
 const WEEKDAY = ['日', '月', '火', '水', '木', '金', '土'];
 
+/** "YYYY-MM-DD" を "M/D(曜)" に整形。 */
+function formatVisitDate(ds: string): string {
+  const [y, m, d] = ds.split('-').map(Number);
+  const wd = WEEKDAY[new Date(y, m - 1, d).getDay()];
+  return `${m}/${d}(${wd})`;
+}
+
 // 開発プレビュー：端末設定・PIN無しでタブレット画面の見た目を確認（VITE_DEV_SCREENS=1）
 const DEV_PREVIEW = import.meta.env.VITE_DEV_SCREENS === '1';
 const MOCK_USERS = [
@@ -36,11 +43,19 @@ const MOCK_USERS = [
 ] as unknown as KioskUser[];
 const MOCK_BOARD = {
   today: {
-    planIn: '09:00',
-    planOut: '16:00',
+    planIn: '10:00',
+    planOut: '15:00',
     status: 'approved',
-    breaks: [],
+    breaks: [{ plannedOut: '13:00', plannedIn: '14:00' }],
     meal: { status: 'reserved' },
+  },
+  nextVisit: {
+    date: '2026-08-01',
+    planIn: '10:00',
+    planOut: '15:00',
+    breaks: [],
+    practicePlace: null,
+    mealReserved: false,
   },
   alerts: { rejected: [], reasonNeeded: [] },
   needsHealthInput: true,
@@ -54,6 +69,40 @@ function Shell({ children }: { children: ReactNode }) {
         {children}
       </div>
     </div>
+  );
+}
+
+/** 予定の1行（ラベル＋値）。 */
+function PlanRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-100 py-3 text-sm last:border-b-0">
+      <span className="text-slate-500">{label}</span>
+      <span className="text-right font-semibold text-slate-700">{value}</span>
+    </div>
+  );
+}
+
+/** 中抜けの行（複数）。無ければ「なし」を1行表示。 */
+function BreakRows({
+  breaks,
+}: {
+  breaks: { plannedOut: string | null; plannedIn: string | null }[];
+}) {
+  if (breaks.length === 0) return <PlanRow label="中抜け" value="なし" />;
+  return (
+    <>
+      {breaks.map((b, i) => (
+        <PlanRow
+          key={i}
+          label="中抜け"
+          value={
+            <span className="font-mono">
+              {b.plannedOut ?? '—'} 〜 {b.plannedIn ?? '—'}
+            </span>
+          }
+        />
+      ))}
+    </>
   );
 }
 
@@ -154,13 +203,11 @@ export default function KioskPage() {
         reasonText,
       );
       toast.success('理由を登録しました');
-      if (stage === 'result') {
-        // 打刻直後の遅刻/早退モーダル → 登録したら名前選択へ戻る
-        backToSelect();
-      } else {
-        // 打刻画面のアラートから入力した場合は、その場でボードを更新
-        setReasonItem(null);
-        setReasonText('');
+      setReasonItem(null);
+      setReasonText('');
+      // 打刻画面のアラートから入力した場合は、その場でボードを更新。
+      // 打刻直後(result)の場合はモーダルを閉じるだけ（自動で名前選択へ戻る）。
+      if (stage !== 'result') {
         kioskBoard(operationToken).then(setBoard).catch(() => undefined);
       }
     } catch (err) {
@@ -170,14 +217,22 @@ export default function KioskPage() {
     }
   };
 
-  // 理由モーダルを閉じる（打刻直後＝任意なのでスキップして戻る／アラートからは閉じるだけ）。
+  // 理由モーダルを閉じる（任意なので閉じるだけ。result中なら閉じた後にタイマーが名前選択へ戻す）。
   const closeReason = () => {
-    if (stage === 'result') backToSelect();
-    else {
-      setReasonItem(null);
-      setReasonText('');
-    }
+    setReasonItem(null);
+    setReasonText('');
   };
+
+  // 完了画面(result)から自動で名前選択へ戻す。退所は次回予定を読む時間を長めに。
+  // 理由モーダル表示中は戻さない（閉じてから改めて計測）。
+  useEffect(() => {
+    if (stage !== 'result' || reasonItem) return;
+    const ms = result?.type === 'out' ? 8000 : 3500;
+    const t = setTimeout(backToSelect, ms);
+    return () => clearTimeout(t);
+    // backToSelect は毎レンダー生成のため依存に含めない（意図的）
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, reasonItem, result]);
 
   const pickUser = (u: KioskUser) => {
     setSelected(u);
@@ -227,15 +282,13 @@ export default function KioskPage() {
       setResult(res);
       setStage('result');
       // 遅刻(通所)・早退(退所)なら、その場で理由入力モーダルを表示（任意・スキップ可）。
+      // 自動で名前選択へ戻る処理は useEffect のタイマーが担当する。
       const needReason =
         (type === 'in' && res.isLate) || (type === 'out' && res.isEarlyLeave);
       if (needReason) {
         const today = `${clock.getFullYear()}-${pad(clock.getMonth() + 1)}-${pad(clock.getDate())}`;
         setReasonItem({ date: today, kind: type === 'in' ? 'late' : 'early' });
         setReasonText('');
-        // モーダルを閉じる／登録するまで自動では戻らない
-      } else {
-        setTimeout(backToSelect, 3500);
       }
     } catch (err) {
       toast.error(getApiErrorMessage(err, '打刻に失敗しました'));
@@ -570,56 +623,45 @@ export default function KioskPage() {
           )}
         </div>
 
-        {/* 本日の予定 */}
+        {/* 本日の予定（通所・退所・中抜け・食事をすべて表示） */}
         <div className="mt-8 border-t border-slate-200 pt-5">
           <div className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400">
             本日の予定
           </div>
-          <div className="flex justify-between border-b border-slate-100 py-3 text-sm">
-            <span className="text-slate-500">通所予定</span>
-            <span className="font-mono font-semibold text-slate-700">
-              {board?.today.planIn ?? '—'}
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-slate-100 py-3 text-sm">
-            <span className="text-slate-500">退所予定</span>
-            <span className="font-mono font-semibold text-slate-700">
-              {board?.today.planOut ?? '—'}
-            </span>
-          </div>
-          {(board?.today.breaks ?? []).map((b, i) => (
-            <div
-              key={i}
-              className="flex justify-between border-b border-slate-100 py-3 text-sm"
-            >
-              <span className="text-slate-500">中抜け</span>
-              <span className="font-mono font-semibold text-slate-700">
-                {b.plannedOut ?? '—'} 〜 {b.plannedIn ?? '—'}
-              </span>
-            </div>
-          ))}
+          <PlanRow
+            label="通所予定"
+            value={<span className="font-mono">{board?.today.planIn ?? '—'}</span>}
+          />
+          <PlanRow
+            label="退所予定"
+            value={<span className="font-mono">{board?.today.planOut ?? '—'}</span>}
+          />
+          <BreakRows breaks={board?.today.breaks ?? []} />
           <div className="flex items-center justify-between py-3 text-sm">
             <span className="text-slate-500">食事</span>
             {board?.today.meal ? (
-              board.today.meal.status === 'eaten' ? (
-                <button
-                  onClick={() => doMeal(false)}
-                  disabled={busy}
-                  className="rounded-lg bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700 transition hover:bg-orange-200 disabled:opacity-50"
-                >
-                  喫食済（取消）
-                </button>
-              ) : (
-                <button
-                  onClick={() => doMeal(true)}
-                  disabled={busy}
-                  className="rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow transition hover:bg-emerald-600 disabled:opacity-50"
-                >
-                  食事をいただきました
-                </button>
-              )
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-orange-600">あり</span>
+                {board.today.meal.status === 'eaten' ? (
+                  <button
+                    onClick={() => doMeal(false)}
+                    disabled={busy}
+                    className="rounded-lg bg-orange-100 px-3 py-1.5 text-xs font-bold text-orange-700 transition hover:bg-orange-200 disabled:opacity-50"
+                  >
+                    喫食済（取消）
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => doMeal(true)}
+                    disabled={busy}
+                    className="rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow transition hover:bg-emerald-600 disabled:opacity-50"
+                  >
+                    食事をいただきました
+                  </button>
+                )}
+              </div>
             ) : (
-              <span className="text-xs text-slate-400">予約なし</span>
+              <span className="text-sm font-bold text-slate-400">なし</span>
             )}
           </div>
         </div>
@@ -664,6 +706,59 @@ export default function KioskPage() {
             {reasonItem ? '理由を入力するか、スキップしてください' : 'まもなく画面が戻ります…'}
           </div>
         </div>
+
+        {/* 退所時：次回の通所予定を表示 */}
+        {result.type === 'out' &&
+          (board?.nextVisit ? (
+            <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left">
+              <div className="mb-1 text-center text-xs font-bold uppercase tracking-wider text-slate-400">
+                次回の予定（{formatVisitDate(board.nextVisit.date)}）
+              </div>
+              <PlanRow
+                label="通所予定"
+                value={<span className="font-mono">{board.nextVisit.planIn ?? '—'}</span>}
+              />
+              <PlanRow
+                label="退所予定"
+                value={<span className="font-mono">{board.nextVisit.planOut ?? '—'}</span>}
+              />
+              <BreakRows breaks={board.nextVisit.breaks} />
+              {board.nextVisit.practicePlace && (
+                <PlanRow
+                  label="実習先"
+                  value={
+                    <span className="font-bold text-violet-600">
+                      {board.nextVisit.practicePlace}
+                    </span>
+                  }
+                />
+              )}
+              <div className="flex items-center justify-between py-3 text-sm">
+                <span className="text-slate-500">食事</span>
+                <span
+                  className={`text-sm font-bold ${board.nextVisit.mealReserved ? 'text-orange-600' : 'text-slate-400'}`}
+                >
+                  {board.nextVisit.mealReserved ? 'あり' : 'なし'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            board && (
+              <div className="mt-2 text-center text-sm text-slate-400">
+                次回の通所予定はありません
+              </div>
+            )
+          ))}
+
+        {!reasonItem && (
+          <button
+            onClick={backToSelect}
+            className="mt-5 w-full rounded-xl border border-slate-200 py-3 text-sm font-bold text-slate-500 hover:bg-slate-50"
+          >
+            戻る
+          </button>
+        )}
+
         {reasonModal}
       </Shell>
     );
