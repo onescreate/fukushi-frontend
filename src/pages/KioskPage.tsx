@@ -46,7 +46,7 @@ const MOCK_BOARD = {
     planIn: '10:00',
     planOut: '15:00',
     status: 'approved',
-    breaks: [{ plannedOut: '13:00', plannedIn: '14:00' }],
+    breaks: [{ plannedOut: '13:00', plannedIn: '14:00', note: '通院：精神科' }],
     meal: { status: 'reserved' },
   },
   nextVisit: {
@@ -82,11 +82,11 @@ function PlanRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-/** 中抜けの行（複数）。無ければ「なし」を1行表示。 */
+/** 中抜けの行（複数）。無ければ「なし」を1行表示。用件があれば併記。 */
 function BreakRows({
   breaks,
 }: {
-  breaks: { plannedOut: string | null; plannedIn: string | null }[];
+  breaks: { plannedOut: string | null; plannedIn: string | null; note: string | null }[];
 }) {
   if (breaks.length === 0) return <PlanRow label="中抜け" value="なし" />;
   return (
@@ -96,8 +96,13 @@ function BreakRows({
           key={i}
           label="中抜け"
           value={
-            <span className="font-mono">
-              {b.plannedOut ?? '—'} 〜 {b.plannedIn ?? '—'}
+            <span className="inline-flex flex-wrap items-center justify-end gap-x-2">
+              <span className="font-mono">
+                {b.plannedOut ?? '—'} 〜 {b.plannedIn ?? '—'}
+              </span>
+              {b.note && (
+                <span className="text-xs font-normal text-slate-500">{b.note}</span>
+              )}
             </span>
           }
         />

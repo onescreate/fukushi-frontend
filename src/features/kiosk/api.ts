@@ -52,6 +52,8 @@ export type ReasonKind = 'absence' | 'late' | 'early';
 export interface KioskVisitBreak {
   plannedOut: string | null;
   plannedIn: string | null;
+  /** 用件（例「通院：精神科」）。任意。 */
+  note: string | null;
 }
 
 /** 次回の通所予定（退所打刻時に表示） */
