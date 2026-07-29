@@ -14,6 +14,7 @@ export interface BillingRow {
   taxRate: number | null;
   facilityName?: string | null;
   paymentDate: string | null;
+  issuedDate: string | null;
   note: string | null;
 }
 
@@ -74,6 +75,22 @@ export function useSetPayment() {
     }) => apiClient.patch('/meal-billing/payment', data).then((r) => r.data),
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: ['meal-billing'] }),
+  });
+}
+
+export function useSetIssued() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      userId: string;
+      year: number;
+      month: number;
+      issuedDate: string | null;
+    }) => apiClient.patch('/meal-billing/issued', data).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meal-billing'] });
+      qc.invalidateQueries({ queryKey: ['stats', 'badges'] });
+    },
   });
 }
 

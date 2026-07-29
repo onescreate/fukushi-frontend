@@ -38,6 +38,7 @@ import {
   useBillingClose,
   useMealBilling,
   useSetBillingNote,
+  useSetIssued,
   useSetPayment,
   type BillingRow,
 } from '../features/meals/billingApi';
@@ -60,6 +61,28 @@ export default function MealBillingPage() {
   const { data, isLoading } = useMealBilling(facilityId, year, month);
   const setPayment = useSetPayment();
   const setNote = useSetBillingNote();
+  const setIssued = useSetIssued();
+  const canMarkIssued = hasPermission(me, 'billing.issue');
+  const [issuedRevert, setIssuedRevert] = useState<BillingRow | null>(null);
+
+  const markIssued = async (row: BillingRow) => {
+    try {
+      await setIssued.mutateAsync({ userId: row.userId, year, month, issuedDate: todayStr() });
+      toast.success('発行済みにしました');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
+  const confirmIssuedRevert = async () => {
+    if (!issuedRevert) return;
+    try {
+      await setIssued.mutateAsync({ userId: issuedRevert.userId, year, month, issuedDate: null });
+      toast.success('未発行に戻しました');
+      setIssuedRevert(null);
+    } catch (err) {
+      toast.error(getApiErrorMessage(err));
+    }
+  };
 
   const [payTarget, setPayTarget] = useState<BillingRow | null>(null);
   const [payDate, setPayDate] = useState(todayStr());
@@ -122,7 +145,7 @@ export default function MealBillingPage() {
   const canIssue = hasPermission(me, 'billing.issue') && !!singleFacilityId;
   const canClose = hasPermission(me, 'closing.manage') && !!singleFacilityId;
   const hasActions = canPay || canIssue;
-  const colCount = (hasActions ? 8 : 7) + (isMulti ? 1 : 0);
+  const colCount = (hasActions ? 9 : 8) + (isMulti ? 1 : 0);
 
   const closeMonth = useBillingClose(false);
   const reopenMonth = useBillingClose(true);
@@ -230,6 +253,7 @@ export default function MealBillingPage() {
                 <TableHead className="text-right">キャンセル料</TableHead>
                 <TableHead className="text-right">税込合計</TableHead>
                 <TableHead className="text-right">うち消費税</TableHead>
+                <TableHead>発行</TableHead>
                 <TableHead>入金</TableHead>
                 {hasActions && <TableHead className="w-20 text-right">操作</TableHead>}
               </TableRow>
@@ -273,6 +297,33 @@ export default function MealBillingPage() {
                     <TableCell className="text-right font-semibold tabular-nums">{yen(r.total)}</TableCell>
                     <TableCell className="text-right tabular-nums text-muted-foreground">
                       {yen(r.taxAmount)}
+                    </TableCell>
+                    <TableCell>
+                      {r.issuedDate ? (
+                        <button
+                          type="button"
+                          disabled={!canMarkIssued}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canMarkIssued) setIssuedRevert(r);
+                          }}
+                          className="inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-medium text-sky-700 disabled:cursor-default"
+                        >
+                          発行済 {formatDate(r.issuedDate)}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={!canMarkIssued || setIssued.isPending}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (canMarkIssued) markIssued(r);
+                          }}
+                          className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-500 disabled:cursor-default"
+                        >
+                          未発行
+                        </button>
+                      )}
                     </TableCell>
                     <TableCell>
                       {r.paymentDate ? (
@@ -427,6 +478,15 @@ export default function MealBillingPage() {
         description={`${revertTarget?.userName ?? ''} さんの${year}年${month}月分の入金記録を取り消します。`}
         confirmLabel="未入金に戻す"
         onConfirm={confirmRevert}
+      />
+
+      <ConfirmDialog
+        open={!!issuedRevert}
+        onOpenChange={(o) => !o && setIssuedRevert(null)}
+        title="未発行に戻しますか？"
+        description={`${issuedRevert?.userName ?? ''} さんの${year}年${month}月分を未発行に戻します。`}
+        confirmLabel="未発行に戻す"
+        onConfirm={confirmIssuedRevert}
       />
     </div>
   );
