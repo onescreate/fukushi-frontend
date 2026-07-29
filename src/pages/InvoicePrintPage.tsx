@@ -3,7 +3,7 @@ import { Navigate, useSearchParams } from 'react-router-dom';
 import { Printer, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useMealBilling, type BillingRow } from '../features/meals/billingApi';
-import { useActiveInvoiceSetting } from '../features/meals/invoiceApi';
+import { useInvoiceIssuer, type ResolvedIssuer } from '../features/meals/invoiceApi';
 
 
 function Invoice({
@@ -15,7 +15,7 @@ function Invoice({
   row: BillingRow;
   year: number;
   month: number;
-  issuer: ReturnType<typeof useActiveInvoiceSetting>['data'];
+  issuer: ResolvedIssuer | undefined;
 }) {
   return (
     <div className="invoice mx-auto max-w-2xl bg-white p-10 text-slate-800">
@@ -35,7 +35,7 @@ function Invoice({
           </div>
         </div>
         <div className="text-right text-sm leading-relaxed">
-          {issuer ? (
+          {issuer?.issuerName ? (
             <>
               <p className="text-base font-bold">{issuer.issuerName}</p>
               {issuer.postalCode && <p>〒{issuer.postalCode}</p>}
@@ -44,9 +44,20 @@ function Invoice({
               {issuer.registrationNumber && (
                 <p className="mt-1">登録番号: {issuer.registrationNumber}</p>
               )}
+              {issuer.sealImage && (
+                <div className="mt-2 flex justify-end">
+                  <img
+                    src={issuer.sealImage}
+                    alt="社印"
+                    className="h-16 w-16 object-contain"
+                  />
+                </div>
+              )}
             </>
           ) : (
-            <p className="text-rose-500">※発行者情報が未設定です</p>
+            <p className="text-rose-500">
+              ※発行者情報が未設定です（ポータルで法人を設定してください）
+            </p>
           )}
         </div>
       </div>
@@ -109,10 +120,15 @@ function Invoice({
           <p className="whitespace-pre-wrap text-slate-600">{issuer.bankInfo}</p>
         </div>
       )}
-      {row.note && (
+      {(row.note || issuer?.remark) && (
         <div className="mt-4 text-sm">
           <p className="font-semibold">備考</p>
-          <p className="whitespace-pre-wrap text-slate-600">{row.note}</p>
+          {issuer?.remark && (
+            <p className="whitespace-pre-wrap text-slate-600">{issuer.remark}</p>
+          )}
+          {row.note && (
+            <p className="whitespace-pre-wrap text-slate-600">{row.note}</p>
+          )}
         </div>
       )}
     </div>
@@ -136,7 +152,7 @@ export default function InvoicePrintPage() {
   );
   const lastDay = new Date(year, month, 0).getDate();
   const monthEnd = `${year}-${pad(month)}-${pad(lastDay)}`;
-  const { data: issuer } = useActiveInvoiceSetting(
+  const { data: issuer } = useInvoiceIssuer(
     authReady ? facilityId : '',
     monthEnd,
   );

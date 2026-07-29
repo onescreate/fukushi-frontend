@@ -48,6 +48,93 @@ export function useActiveInvoiceSetting(facilityId: string, date: string) {
   });
 }
 
+// ---------- 発行者の自動解決（ポータル法人）＋事業所ごとの設定 ----------
+
+export interface ResolvedIssuer {
+  issuerName: string | null;
+  registrationNumber: string | null;
+  postalCode: string | null;
+  address: string | null;
+  phone: string | null;
+  bankInfo: string | null;
+  sealImage: string | null;
+  remark: string | null;
+  source: 'portal' | 'legacy' | 'none';
+}
+
+/** 請求書に使う発行者情報（ポータル法人＋振込先＋社印＋上書きを解決）。 */
+export function useInvoiceIssuer(facilityId: string, date: string) {
+  return useQuery<ResolvedIssuer>({
+    queryKey: ['invoice-issuer', facilityId, date],
+    queryFn: async () =>
+      (
+        await apiClient.get<ResolvedIssuer>(
+          `/invoice-settings/${facilityId}/issuer`,
+          { params: { date } },
+        )
+      ).data,
+    enabled: !!facilityId && !!date,
+  });
+}
+
+export interface InvoiceConfig {
+  facilityId: string;
+  bankAccountId: string | null;
+  sealEnabled: boolean;
+  issuerNameOverride: string | null;
+  registrationNumberOverride: string | null;
+  postalCodeOverride: string | null;
+  addressOverride: string | null;
+  phoneOverride: string | null;
+  bankInfoOverride: string | null;
+  remark: string | null;
+}
+
+export interface CorpAccount {
+  id: string;
+  label: string;
+  name: string | null;
+}
+
+export function useInvoiceConfig(facilityId: string) {
+  return useQuery<InvoiceConfig>({
+    queryKey: ['invoice-config', facilityId],
+    queryFn: async () =>
+      (await apiClient.get<InvoiceConfig>(`/invoice-settings/${facilityId}/config`)).data,
+    enabled: !!facilityId,
+  });
+}
+
+export function useCorpAccounts(facilityId: string) {
+  return useQuery<{ enabled: boolean; accounts: CorpAccount[] }>({
+    queryKey: ['invoice-accounts', facilityId],
+    queryFn: async () =>
+      (
+        await apiClient.get<{ enabled: boolean; accounts: CorpAccount[] }>(
+          `/invoice-settings/${facilityId}/accounts`,
+        )
+      ).data,
+    enabled: !!facilityId,
+  });
+}
+
+export function useSaveInvoiceConfig() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      facilityId,
+      data,
+    }: {
+      facilityId: string;
+      data: Partial<Omit<InvoiceConfig, 'facilityId'>>;
+    }) => apiClient.put(`/invoice-settings/${facilityId}/config`, data).then((r) => r.data),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['invoice-config', v.facilityId] });
+      qc.invalidateQueries({ queryKey: ['invoice-issuer', v.facilityId] });
+    },
+  });
+}
+
 export function useCreateInvoiceSetting() {
   const qc = useQueryClient();
   return useMutation({
