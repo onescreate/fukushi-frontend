@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { CalendarClock, ChevronsLeft, HelpCircle, ListTodo, LogOut, Menu } from 'lucide-react';
+import { AlertCircle, CalendarClock, ChevronsLeft, HelpCircle, ListTodo, LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { hasPermission, useMe } from '../../features/auth/useMe';
 import { useBadges } from '../../features/stats/api';
@@ -45,6 +45,9 @@ export default function AppLayout() {
     if (to === '/meal-approvals') return badges.pendingMeal;
     return 0;
   };
+  // 未発行の請求書がある店舗では、食事請求に注意マーク（〇に！）を出す。
+  const warnFor = (to: string) =>
+    to === '/meal-billing' && (badges?.unissued ?? 0) > 0;
 
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem(STORAGE_KEY) === '1',
@@ -71,6 +74,7 @@ export default function AppLayout() {
   const renderItem = (item: NavItem) => {
     const Icon = item.icon;
     const badge = badgeCountFor(item.to);
+    const warn = warnFor(item.to);
     // ハブは自身か子のいずれかのパスに居ればアクティブ
     const active =
       item.to === '/'
@@ -104,6 +108,15 @@ export default function AppLayout() {
           strokeWidth={1.9}
         />
         {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+        {warn && (
+          <span
+            aria-label="未発行の請求書があります"
+            title="未発行の請求書があります"
+            className={collapsed ? 'absolute left-0.5 top-0.5' : ''}
+          >
+            <AlertCircle className="size-4 text-amber-400" strokeWidth={2.6} />
+          </span>
+        )}
         {badge > 0 && (
           <span
             className={`flex min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ${

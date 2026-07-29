@@ -7,6 +7,7 @@ import {
   CalendarCheck,
   ClipboardCheck,
   Clock,
+  FileText,
   Inbox,
   Pencil,
   Receipt,
@@ -76,7 +77,8 @@ export default function DashboardPage() {
   const alerts = [
     { label: '承認待ちの予定', to: '/approvals', icon: CalendarCheck, count: badges?.pendingSchedule ?? 0, show: canApprove },
     { label: '承認待ちの食事', to: '/meal-approvals', icon: ClipboardCheck, count: badges?.pendingMeal ?? 0, show: canApproveMeal },
-    { label: '未払いの請求', to: '/meal-billing', icon: Receipt, count: badges?.unpaid ?? 0, show: canSeeBilling },
+    { label: '未発行の請求書', to: '/meal-billing', icon: FileText, count: badges?.unissued ?? 0, show: canSeeBilling },
+    { label: '未入金の請求', to: '/meal-billing', icon: Receipt, count: badges?.unpaid ?? 0, show: canSeeBilling },
     { label: '納品の未入力', to: '/meal-deliveries', icon: Truck, count: badges?.deliveryMissing ?? 0, show: canSeeDelivery },
     { label: '健康記録の未入力', to: '/health-records', icon: Activity, count: badges?.healthMissing ?? 0, show: canSeeHealth },
   ].filter((a) => a.show);
@@ -119,7 +121,7 @@ export default function DashboardPage() {
               const active = a.count > 0;
               return (
                 <Link
-                  key={a.to}
+                  key={a.label}
                   to={a.to}
                   className={`group rounded-xl border p-3.5 transition-all hover:-translate-y-0.5 ${
                     active ? 'border-rose-200 bg-rose-50 hover:shadow-md' : 'border-[#ECEDF1] bg-white hover:border-slate-300'

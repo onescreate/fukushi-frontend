@@ -30,6 +30,8 @@ export interface FacilityStats {
 
 export interface Badges {
   unpaid: number;
+  /** 締め済みの月で、まだ請求書を発行していない件数 */
+  unissued: number;
   deliveryMissing: number;
   pendingSchedule: number;
   pendingMeal: number;
