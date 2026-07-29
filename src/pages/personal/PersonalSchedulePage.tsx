@@ -11,6 +11,7 @@ import {
 import type { Schedule } from '../../features/schedules/api';
 import { useMyAnnouncements } from '../../features/announcements/api';
 import { formatDate, pad } from '../../lib/format';
+import { getHolidayName } from '../../lib/holidays';
 import { PersonalSubmitDialog } from './PersonalSubmitDialog';
 import { PersonalReasonDialog } from './PersonalReasonDialog';
 import { PersonalBulkSubmitDialog } from './PersonalBulkSubmitDialog';
@@ -58,6 +59,8 @@ export default function PersonalSchedulePage() {
   ];
 
   const reasonNeeded = alerts?.reasonNeeded ?? [];
+  // 欠席・遅刻・早退で理由未入力の日（カレンダーに「要理由」マークを出す）。
+  const reasonMap = new Map(reasonNeeded.map((r) => [r.date.slice(0, 10), r.kind]));
   const todayStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD（ローカル）
   const goToday = () => {
     const now = new Date();
@@ -195,27 +198,33 @@ export default function PersonalSchedulePage() {
             const dow = idx % 7;
             const isToday = ds === todayStr;
             const isSel = bulkMode && selected.has(ds);
+            const holiday = getHolidayName(new Date(year, month - 1, day));
+            const needKind = reasonMap.get(ds); // 'absence'|'late'|'early'|undefined
             return (
               <button
                 key={ds}
                 onClick={() =>
                   bulkMode
                     ? toggleSelect(ds)
-                    : setDayDialog({ date: ds, existing: sch ?? null })
+                    : needKind
+                      ? setReasonDialog({ date: ds, kind: needKind })
+                      : setDayDialog({ date: ds, existing: sch ?? null })
                 }
                 className={`flex min-h-16 flex-col rounded-lg border p-1.5 text-left transition-colors hover:border-indigo-300 active:bg-slate-50 sm:min-h-20 lg:min-h-24 ${
                   isSel
                     ? 'border-indigo-500 bg-indigo-50 ring-1 ring-indigo-400'
-                    : isToday
-                      ? 'border-indigo-400 bg-indigo-50/50 ring-1 ring-indigo-200'
-                      : 'border-slate-200'
+                    : needKind
+                      ? 'border-rose-300 bg-rose-50/50'
+                      : isToday
+                        ? 'border-indigo-400 bg-indigo-50/50 ring-1 ring-indigo-200'
+                        : 'border-slate-200'
                 }`}
               >
                 <span
                   className={`text-xs font-bold ${
                     isToday
                       ? 'text-indigo-600'
-                      : dow === 0
+                      : dow === 0 || holiday
                         ? 'text-red-500'
                         : dow === 6
                           ? 'text-blue-500'
@@ -224,22 +233,33 @@ export default function PersonalSchedulePage() {
                 >
                   {day}
                 </span>
-                {sch && (
-                  <span
-                    className={`mt-1 rounded-md px-1 py-0.5 text-center text-[10px] font-bold leading-tight sm:text-[11px] ${
-                      sch.status === 'approved'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : sch.status === 'pending'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-rose-100 text-rose-600'
-                    }`}
-                  >
-                    {sch.status === 'approved'
-                      ? '通所'
-                      : sch.status === 'pending'
-                        ? '申請中'
-                        : '却下'}
+                {holiday && (
+                  <span className="truncate text-[9px] font-bold text-red-400 sm:text-[10px]">
+                    {holiday}
                   </span>
+                )}
+                {needKind ? (
+                  <span className="mt-0.5 rounded-md bg-rose-500 px-1 py-0.5 text-center text-[9px] font-bold text-white sm:text-[10px]">
+                    ✓ 要理由
+                  </span>
+                ) : (
+                  sch && (
+                    <span
+                      className={`mt-0.5 rounded-md px-1 py-0.5 text-center text-[10px] font-bold leading-tight sm:text-[11px] ${
+                        sch.status === 'approved'
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : sch.status === 'pending'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-rose-100 text-rose-600'
+                      }`}
+                    >
+                      {sch.status === 'approved'
+                        ? '通所'
+                        : sch.status === 'pending'
+                          ? '申請中'
+                          : '却下'}
+                    </span>
+                  )
                 )}
                 {hasBreak && (
                   <span className="mt-0.5 text-center text-[9px] font-bold text-slate-400 sm:text-[10px]">
