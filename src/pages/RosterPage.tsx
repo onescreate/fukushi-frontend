@@ -254,6 +254,11 @@ export default function RosterPage() {
                           {r.planIn || r.planOut ? '〜' : ''}
                           {r.planOut ?? ''}
                         </div>
+                        {r.practicePlace && (
+                          <div className="mt-0.5 font-sans font-bold text-violet-600">
+                            実習：{r.practicePlace}
+                          </div>
+                        )}
                         {r.breaks.map((b, i) => (
                           <div key={i} className="mt-0.5 text-amber-600">
                             中抜け {b.plannedOut ?? '—'}〜{b.plannedIn ?? '—'}

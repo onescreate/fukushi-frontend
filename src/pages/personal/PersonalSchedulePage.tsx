@@ -160,6 +160,9 @@ export default function PersonalSchedulePage() {
                 <span className="size-2 rounded-full bg-emerald-500" />通所
               </span>
               <span className="flex items-center gap-1">
+                <span className="size-2 rounded-full bg-violet-500" />実習
+              </span>
+              <span className="flex items-center gap-1">
                 <span className="size-2 rounded-full bg-amber-500" />申請中
               </span>
             </div>
@@ -194,6 +197,9 @@ export default function PersonalSchedulePage() {
             const sch = byDate.get(ds);
             const hasBreak = (sch?.details ?? []).some(
               (d) => d.eventType === 'break_out',
+            );
+            const isPractice = (sch?.details ?? []).some(
+              (d) => d.eventType === 'practice',
             );
             const dow = idx % 7;
             const isToday = ds === todayStr;
@@ -246,18 +252,22 @@ export default function PersonalSchedulePage() {
                   sch && (
                     <span
                       className={`mt-0.5 rounded-md px-1 py-0.5 text-center text-[10px] font-bold leading-tight sm:text-[11px] ${
-                        sch.status === 'approved'
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : sch.status === 'pending'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-rose-100 text-rose-600'
+                        sch.status === 'pending'
+                          ? 'bg-amber-100 text-amber-700'
+                          : sch.status === 'rejected'
+                            ? 'bg-rose-100 text-rose-600'
+                            : isPractice
+                              ? 'bg-violet-100 text-violet-700'
+                              : 'bg-emerald-100 text-emerald-700'
                       }`}
                     >
-                      {sch.status === 'approved'
-                        ? '通所'
-                        : sch.status === 'pending'
-                          ? '申請中'
-                          : '却下'}
+                      {sch.status === 'pending'
+                        ? '申請中'
+                        : sch.status === 'rejected'
+                          ? '却下'
+                          : isPractice
+                            ? '実習'
+                            : '通所'}
                     </span>
                   )
                 )}

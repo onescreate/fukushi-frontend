@@ -26,15 +26,15 @@ export function PersonalBulkSubmitDialog({
   onDone: () => void;
 }) {
   const bulk = useMyBulkSubmit();
-  const [planIn, setPlanIn] = useState('09:00');
-  const [planOut, setPlanOut] = useState('16:00');
+  const [planIn, setPlanIn] = useState('10:00');
+  const [planOut, setPlanOut] = useState('15:00');
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setPlanIn('09:00');
-      setPlanOut('16:00');
+      setPlanIn('10:00');
+      setPlanOut('15:00');
       setNote('');
       setError('');
     }

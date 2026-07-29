@@ -163,6 +163,11 @@ export default function SchedulesPage() {
                       {sch.planOut ?? ''}
                     </span>
                   )}
+                  {sch?.details?.some((d) => d.eventType === 'practice') && (
+                    <span className="mt-0.5 rounded bg-violet-100 px-1 py-0.5 text-[10px] font-medium text-violet-700">
+                      実習
+                    </span>
+                  )}
                   {sch?.details?.some((d) => d.eventType === 'break_out') && (
                     <span className="mt-0.5 rounded bg-amber-100 px-1 py-0.5 text-[10px] font-medium text-amber-700">
                       中抜け

@@ -29,6 +29,7 @@ const toRosterRow = (r: AttendanceListRow): RosterRow => ({
   planIn: r.planIn,
   planOut: r.planOut,
   scheduleStatus: null,
+  practicePlace: null,
   breaks: [],
   clockIn: r.actIn,
   clockOut: r.actOut,

@@ -4,16 +4,17 @@ import { Plus, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getApiErrorMessage } from '../../lib/errors';
+import { formatDate } from '../../lib/format';
 import { useMySubmit } from '../../features/schedules/myApi';
 import type { Schedule } from '../../features/schedules/api';
 
+type DayType = 'commute' | 'practice';
 type BreakCategory = '' | '通院' | 'ハローワーク' | 'その他';
 
 // 用件のサブ選択肢（通院・ハローワークのみ。「その他」は自由入力）。
@@ -30,7 +31,7 @@ interface BreakRow {
   freeText: string;
 }
 
-// 用件を note 文字列（例「通院：精神科」「ハローワーク：その他内容」）に組み立てる。
+// 用件を note 文字列（例「通院：精神科」）に組み立てる。
 function composeBreakNote(b: BreakRow): string | undefined {
   if (!b.category) return undefined;
   if (b.category === 'その他') {
@@ -58,7 +59,7 @@ function parseBreakNote(
 }
 
 const pill = (active: boolean) =>
-  `rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${
+  `rounded-full border px-3 py-1.5 text-sm font-bold transition-colors ${
     active
       ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
       : 'border-slate-200 text-slate-500 active:bg-slate-100'
@@ -76,16 +77,23 @@ export function PersonalSubmitDialog({
   existing: Schedule | null;
 }) {
   const submit = useMySubmit();
-  const [planIn, setPlanIn] = useState('09:00');
-  const [planOut, setPlanOut] = useState('16:00');
+  const [dayType, setDayType] = useState<DayType>('commute');
+  const [planIn, setPlanIn] = useState('10:00');
+  const [planOut, setPlanOut] = useState('15:00');
+  const [practicePlace, setPracticePlace] = useState('');
   const [note, setNote] = useState('');
   const [breaks, setBreaks] = useState<BreakRow[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setPlanIn(existing?.planIn ?? '09:00');
-      setPlanOut(existing?.planOut ?? '16:00');
+      const practice = (existing?.details ?? []).find(
+        (d) => d.eventType === 'practice',
+      );
+      setDayType(practice ? 'practice' : 'commute');
+      setPracticePlace(practice?.note ?? '');
+      setPlanIn(existing?.planIn ?? '10:00');
+      setPlanOut(existing?.planOut ?? '15:00');
       setNote(existing?.note ?? '');
       setBreaks(
         (existing?.details ?? [])
@@ -127,19 +135,28 @@ export function PersonalSubmitDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    if (dayType === 'practice' && !practicePlace.trim()) {
+      setError('実習先を入力してください。');
+      return;
+    }
     try {
       const res = await submit.mutateAsync({
         planDate: date,
         planIn,
         planOut,
         note: note || undefined,
-        breaks: breaks
-          .filter((b) => b.plannedOut || b.plannedIn)
-          .map((b) => ({
-            plannedOut: b.plannedOut || undefined,
-            plannedIn: b.plannedIn || undefined,
-            note: composeBreakNote(b),
-          })),
+        practicePlace:
+          dayType === 'practice' ? practicePlace.trim() : undefined,
+        breaks:
+          dayType === 'practice'
+            ? []
+            : breaks
+                .filter((b) => b.plannedOut || b.plannedIn)
+                .map((b) => ({
+                  plannedOut: b.plannedOut || undefined,
+                  plannedIn: b.plannedIn || undefined,
+                  note: composeBreakNote(b),
+                })),
       });
       toast.success(
         res.autoApproved ? '予定を登録しました' : '予定を申請しました（承認待ち）',
@@ -152,136 +169,185 @@ export function PersonalSubmitDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-[28rem] overflow-y-auto">
+      <DialogContent className="max-h-[88vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{date} の通所予定</DialogTitle>
+          <DialogTitle className="text-lg">
+            {formatDate(date)} の予定
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
-            <label className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-500">通所（開始）</span>
-              <Input
-                type="time"
-                value={planIn}
-                onChange={(e) => setPlanIn(e.target.value)}
-                className="h-12 text-base"
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-xs font-bold text-slate-500">退所（終了）</span>
-              <Input
-                type="time"
-                value={planOut}
-                onChange={(e) => setPlanOut(e.target.value)}
-                className="h-12 text-base"
-              />
-            </label>
-          </div>
-
-          {/* 中抜け */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-500">
-                中抜け（通院・ハローワーク等）
-              </span>
-              <button
-                type="button"
-                onClick={addBreak}
-                className="flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 active:bg-slate-200"
-              >
-                <Plus className="size-3.5" /> 追加
-              </button>
+          {/* 種別（通所／実習） */}
+          <section className="space-y-2">
+            <span className="text-sm font-bold text-slate-700">種別</span>
+            <div className="inline-flex w-full rounded-xl border border-slate-200 bg-slate-100 p-1">
+              {(
+                [
+                  ['commute', '通所'],
+                  ['practice', '実習'],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  type="button"
+                  key={v}
+                  onClick={() => setDayType(v)}
+                  className={`flex-1 rounded-lg py-2.5 text-sm font-bold transition-colors ${
+                    dayType === v
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-slate-500'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-            {breaks.length === 0 && (
-              <p className="text-xs text-slate-400">
-                通院・ハローワーク等で外出する予定があれば追加してください。
-              </p>
-            )}
-            {breaks.map((b, i) => (
-              <div
-                key={i}
-                className="space-y-2.5 rounded-xl border border-slate-200 p-2.5"
-              >
-                {/* 時間 */}
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="time"
-                    value={b.plannedOut}
-                    onChange={(e) => setField(i, 'plannedOut', e.target.value)}
-                    className="h-11 flex-1 text-base"
-                    aria-label="外出"
-                  />
-                  <span className="text-slate-400">→</span>
-                  <Input
-                    type="time"
-                    value={b.plannedIn}
-                    onChange={(e) => setField(i, 'plannedIn', e.target.value)}
-                    className="h-11 flex-1 text-base"
-                    aria-label="戻り"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeBreak(i)}
-                    className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-400 active:bg-slate-100"
-                    aria-label="削除"
-                  >
-                    <X className="size-4" />
-                  </button>
-                </div>
+          </section>
 
-                {/* 用件（通院／ハローワーク／その他） */}
-                <div className="flex flex-wrap gap-1.5">
-                  {(['通院', 'ハローワーク', 'その他'] as const).map((c) => (
+          {/* 実習先（実習のとき） */}
+          {dayType === 'practice' && (
+            <section className="space-y-2">
+              <span className="text-sm font-bold text-slate-700">
+                実習先 <span className="text-rose-500">*</span>
+              </span>
+              <Input
+                value={practicePlace}
+                onChange={(e) => setPracticePlace(e.target.value)}
+                placeholder="例：〇〇株式会社"
+                className="h-12 text-base"
+              />
+            </section>
+          )}
+
+          {/* 時間 */}
+          <section className="space-y-2">
+            <span className="text-sm font-bold text-slate-700">時間</span>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-500">
+                  {dayType === 'practice' ? '開始' : '通所（開始）'}
+                </span>
+                <Input
+                  type="time"
+                  value={planIn}
+                  onChange={(e) => setPlanIn(e.target.value)}
+                  className="h-12 text-base"
+                />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-semibold text-slate-500">
+                  {dayType === 'practice' ? '終了' : '退所（終了）'}
+                </span>
+                <Input
+                  type="time"
+                  value={planOut}
+                  onChange={(e) => setPlanOut(e.target.value)}
+                  className="h-12 text-base"
+                />
+              </label>
+            </div>
+          </section>
+
+          {/* 中抜け（通所のときのみ） */}
+          {dayType === 'commute' && (
+            <section className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-slate-700">
+                  中抜け（通院・ハローワーク等）
+                </span>
+                <button
+                  type="button"
+                  onClick={addBreak}
+                  className="flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 active:bg-slate-200"
+                >
+                  <Plus className="size-3.5" /> 追加
+                </button>
+              </div>
+              {breaks.length === 0 && (
+                <p className="text-xs text-slate-400">
+                  通院・ハローワーク等で外出する予定があれば追加してください。
+                </p>
+              )}
+              {breaks.map((b, i) => (
+                <div
+                  key={i}
+                  className="space-y-2.5 rounded-xl border border-slate-200 p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={b.plannedOut}
+                      onChange={(e) => setField(i, 'plannedOut', e.target.value)}
+                      className="h-11 flex-1 text-base"
+                      aria-label="外出"
+                    />
+                    <span className="text-slate-400">→</span>
+                    <Input
+                      type="time"
+                      value={b.plannedIn}
+                      onChange={(e) => setField(i, 'plannedIn', e.target.value)}
+                      className="h-11 flex-1 text-base"
+                      aria-label="戻り"
+                    />
                     <button
                       type="button"
-                      key={c}
-                      onClick={() => setCategory(i, c)}
-                      className={pill(b.category === c)}
+                      onClick={() => removeBreak(i)}
+                      className="grid size-9 shrink-0 place-items-center rounded-lg text-slate-400 active:bg-slate-100"
+                      aria-label="削除"
                     >
-                      {c}
+                      <X className="size-4" />
                     </button>
-                  ))}
-                </div>
+                  </div>
 
-                {/* サブ選択（通院・ハローワーク） */}
-                {(b.category === '通院' || b.category === 'ハローワーク') && (
+                  {/* 用件 */}
                   <div className="flex flex-wrap gap-1.5">
-                    {SUB_OPTIONS[b.category].map((s) => (
+                    {(['通院', 'ハローワーク', 'その他'] as const).map((c) => (
                       <button
                         type="button"
-                        key={s}
-                        onClick={() => setSub(i, s)}
-                        className={pill(b.sub === s)}
+                        key={c}
+                        onClick={() => setCategory(i, c)}
+                        className={pill(b.category === c)}
                       >
-                        {s}
+                        {c}
                       </button>
                     ))}
                   </div>
-                )}
+                  {(b.category === '通院' || b.category === 'ハローワーク') && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {SUB_OPTIONS[b.category].map((s) => (
+                        <button
+                          type="button"
+                          key={s}
+                          onClick={() => setSub(i, s)}
+                          className={pill(b.sub === s)}
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {(b.category === 'その他' || b.sub === 'その他') && (
+                    <Input
+                      value={b.freeText}
+                      onChange={(e) => setField(i, 'freeText', e.target.value)}
+                      className="h-11"
+                      placeholder={
+                        b.category === '通院' ? '診療科を入力' : '内容を入力'
+                      }
+                    />
+                  )}
+                </div>
+              ))}
+            </section>
+          )}
 
-                {/* 自由入力（その他 / 診療科その他） */}
-                {(b.category === 'その他' || b.sub === 'その他') && (
-                  <Input
-                    value={b.freeText}
-                    onChange={(e) => setField(i, 'freeText', e.target.value)}
-                    className="h-10"
-                    placeholder={
-                      b.category === '通院' ? '診療科を入力' : '内容を入力'
-                    }
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <label className="block space-y-1.5">
-            <span className="text-xs font-bold text-slate-500">
+          {/* 連絡事項 */}
+          <section className="space-y-2">
+            <span className="text-sm font-bold text-slate-700">
               連絡事項（任意）
             </span>
             <Input
@@ -289,9 +355,9 @@ export function PersonalSubmitDialog({
               onChange={(e) => setNote(e.target.value)}
               className="h-11"
             />
-          </label>
+          </section>
 
-          <DialogFooter className="gap-2">
+          <div className="flex gap-2 pt-1">
             <Button
               type="button"
               variant="outline"
@@ -308,7 +374,7 @@ export function PersonalSubmitDialog({
             >
               {submit.isPending ? '送信中…' : '申請する'}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

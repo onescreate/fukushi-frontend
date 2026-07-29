@@ -32,6 +32,7 @@ export function useMySubmit() {
       planIn?: string;
       planOut?: string;
       note?: string;
+      practicePlace?: string;
       breaks?: MyBreak[];
     }) =>
       apiClient

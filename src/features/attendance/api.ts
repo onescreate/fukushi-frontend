@@ -30,6 +30,8 @@ export interface RosterRow {
   planIn: string | null;
   planOut: string | null;
   scheduleStatus: 'pending' | 'approved' | 'rejected' | null;
+  /** 実習先（実習日のみ。null=通常の通所） */
+  practicePlace: string | null;
   breaks: RosterBreak[];
   clockIn: string | null;
   clockOut: string | null;
