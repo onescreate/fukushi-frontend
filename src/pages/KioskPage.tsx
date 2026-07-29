@@ -154,13 +154,28 @@ export default function KioskPage() {
         reasonText,
       );
       toast.success('理由を登録しました');
-      setReasonItem(null);
-      setReasonText('');
-      kioskBoard(operationToken).then(setBoard).catch(() => undefined);
+      if (stage === 'result') {
+        // 打刻直後の遅刻/早退モーダル → 登録したら名前選択へ戻る
+        backToSelect();
+      } else {
+        // 打刻画面のアラートから入力した場合は、その場でボードを更新
+        setReasonItem(null);
+        setReasonText('');
+        kioskBoard(operationToken).then(setBoard).catch(() => undefined);
+      }
     } catch (err) {
       toast.error(getApiErrorMessage(err));
     } finally {
       setBusy(false);
+    }
+  };
+
+  // 理由モーダルを閉じる（打刻直後＝任意なのでスキップして戻る／アラートからは閉じるだけ）。
+  const closeReason = () => {
+    if (stage === 'result') backToSelect();
+    else {
+      setReasonItem(null);
+      setReasonText('');
     }
   };
 
@@ -211,7 +226,17 @@ export default function KioskPage() {
       const res = await kioskClock(operationToken, type);
       setResult(res);
       setStage('result');
-      setTimeout(backToSelect, 3500);
+      // 遅刻(通所)・早退(退所)なら、その場で理由入力モーダルを表示（任意・スキップ可）。
+      const needReason =
+        (type === 'in' && res.isLate) || (type === 'out' && res.isEarlyLeave);
+      if (needReason) {
+        const today = `${clock.getFullYear()}-${pad(clock.getMonth() + 1)}-${pad(clock.getDate())}`;
+        setReasonItem({ date: today, kind: type === 'in' ? 'late' : 'early' });
+        setReasonText('');
+        // モーダルを閉じる／登録するまで自動では戻らない
+      } else {
+        setTimeout(backToSelect, 3500);
+      }
     } catch (err) {
       toast.error(getApiErrorMessage(err, '打刻に失敗しました'));
     } finally {
@@ -265,6 +290,44 @@ export default function KioskPage() {
 
   const timeStr = `${pad(clock.getHours())}:${pad(clock.getMinutes())}`;
   const dateStr = `${clock.getFullYear()}年${clock.getMonth() + 1}月${clock.getDate()}日 (${WEEKDAY[clock.getDay()]})`;
+
+  // 理由入力モーダル（打刻画面のアラート・打刻直後の遅刻/早退の両方で使う）
+  const isOptionalReason = stage === 'result';
+  const reasonModal = reasonItem ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+        <h3 className="mb-1 text-lg font-bold text-slate-900">
+          {REASON_LABEL[reasonItem.kind]}理由の入力
+        </h3>
+        <p className="mb-4 text-sm text-slate-500">
+          {reasonItem.date}
+          {isOptionalReason && '（任意・スキップできます）'}
+        </p>
+        <textarea
+          value={reasonText}
+          onChange={(e) => setReasonText(e.target.value)}
+          rows={3}
+          placeholder="理由を入力してください"
+          className="mb-4 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-blue-500 focus:bg-white"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={closeReason}
+            className="flex-1 rounded-xl border border-slate-200 py-3 font-semibold text-slate-600"
+          >
+            {isOptionalReason ? 'スキップ' : 'キャンセル'}
+          </button>
+          <button
+            onClick={submitReason}
+            disabled={busy || !reasonText.trim()}
+            className="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white disabled:opacity-50"
+          >
+            登録
+          </button>
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   // ---------- 画面 ----------
 
@@ -568,38 +631,7 @@ export default function KioskPage() {
           {today && today.clockedIn && today.clockedOut ? '戻る' : 'キャンセル'}
         </button>
 
-        {reasonItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4">
-            <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-              <h3 className="mb-1 text-lg font-bold text-slate-900">
-                {REASON_LABEL[reasonItem.kind]}理由の入力
-              </h3>
-              <p className="mb-4 text-sm text-slate-500">{reasonItem.date}</p>
-              <textarea
-                value={reasonText}
-                onChange={(e) => setReasonText(e.target.value)}
-                rows={3}
-                placeholder="理由を入力してください"
-                className="mb-4 w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-slate-800 outline-none focus:border-blue-500 focus:bg-white"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setReasonItem(null)}
-                  className="flex-1 rounded-xl border border-slate-200 py-3 font-semibold text-slate-600"
-                >
-                  キャンセル
-                </button>
-                <button
-                  onClick={submitReason}
-                  disabled={busy || !reasonText.trim()}
-                  className="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white disabled:opacity-50"
-                >
-                  登録
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        {reasonModal}
       </Shell>
     );
   }
@@ -629,9 +661,10 @@ export default function KioskPage() {
             </div>
           )}
           <div className="mt-6 text-sm font-medium text-slate-400">
-            まもなく画面が戻ります…
+            {reasonItem ? '理由を入力するか、スキップしてください' : 'まもなく画面が戻ります…'}
           </div>
         </div>
+        {reasonModal}
       </Shell>
     );
   }
