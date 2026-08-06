@@ -7,7 +7,8 @@ import { auth } from '../lib/firebase';
 
 // 会計ポータルと同じ不具合報告ボタン。押すとその瞬間の画面を撮影し、内容と一緒に
 // ポータルのバックエンド(公開受け口 /error-reports/external)へ送信＝ポータルの一覧に集約される。
-const PORTAL_API = ((import.meta as any).env?.VITE_PORTAL_API_URL || '').replace(/\/$/, '');
+// 送信先＝会計ポータルのバックエンド。環境変数(VITE_PORTAL_API_URL)が未設定でも動くよう本番URLを既定値にする。
+const PORTAL_API = ((import.meta as any).env?.VITE_PORTAL_API_URL || 'https://accounting-api-v2-466112053259.asia-northeast1.run.app').replace(/\/$/, '');
 
 export default function ErrorReportButton() {
   const { firebaseUser } = useAuth();
