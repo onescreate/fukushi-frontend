@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+// ドロップダウンは福祉システム共通のもの（ブラウザ標準の <select> は使わない）
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useFacility } from '../contexts/FacilityContext';
 import { SelectStorePrompt } from '../components/layout/SelectStorePrompt';
 import {
@@ -181,19 +183,29 @@ export default function InvoiceSettingsPage() {
           ) : accounts.length === 0 ? (
             <p className="text-xs text-slate-400">この法人に登録された口座がありません（ポータルで登録してください）。</p>
           ) : (
-            <select
-              value={form.bankAccountId}
-              onChange={(e) => set('bankAccountId', e.target.value)}
-              className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-indigo-400"
+            <Select
+              items={{
+                __none__: '（選択しない）',
+                ...Object.fromEntries(
+                  accounts.map((a) => [String(a.id), `${a.label}${a.name ? `（${a.name}）` : ''}`]),
+                ),
+              }}
+              value={form.bankAccountId ? String(form.bankAccountId) : '__none__'}
+              onValueChange={(v) => set('bankAccountId', v === '__none__' ? '' : String(v))}
             >
-              <option value="">（選択しない）</option>
-              {accounts.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.label}
-                  {a.name ? `（${a.name}）` : ''}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="h-11 w-full">
+                <SelectValue placeholder="（選択しない）" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">（選択しない）</SelectItem>
+                {accounts.map((a) => (
+                  <SelectItem key={a.id} value={String(a.id)}>
+                    {a.label}
+                    {a.name ? `（${a.name}）` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           <p className="text-[11px] text-slate-400">
             選んだ口座が請求書の「お振込先」に表示されます。下の上書きで自由入力も可能です。

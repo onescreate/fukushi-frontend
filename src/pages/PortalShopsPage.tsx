@@ -12,6 +12,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
+// ドロップダウンは福祉システム共通のもの（ブラウザ標準の <select> は使わない）
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   usePortalShops,
   useDesignateShop,
@@ -204,24 +206,38 @@ export default function PortalShopsPage() {
                           </button>
                         </TableCell>
                         <TableCell>
-                          <select
-                            value={s.serviceType ?? ''}
+                          <Select
+                            items={{
+                              __none__: '（未設定）',
+                              ...Object.fromEntries(serviceTypes.map((st) => [st.name, st.name])),
+                              // 一覧に無い既存値も選べるように残す
+                              ...(s.serviceType &&
+                              !serviceTypes.some((st) => st.name === s.serviceType)
+                                ? { [s.serviceType]: s.serviceType }
+                                : {}),
+                            }}
+                            value={s.serviceType ?? '__none__'}
                             disabled={!s.designated || busy}
-                            onChange={(e) => save(s, { serviceType: e.target.value || null })}
-                            className="h-8 rounded-lg border border-[#E3E4EA] bg-white px-2 text-[12.5px] font-semibold text-slate-800 outline-none hover:border-[#D3D4DC] focus:border-indigo-400 disabled:bg-slate-50 disabled:text-slate-300"
+                            onValueChange={(v) =>
+                              save(s, { serviceType: v === '__none__' ? null : String(v) })
+                            }
                           >
-                            <option value="">（未設定）</option>
-                            {serviceTypes.map((st) => (
-                              <option key={st.id} value={st.name}>
-                                {st.name}
-                              </option>
-                            ))}
-                            {/* 一覧に無い既存値も表示 */}
-                            {s.serviceType &&
-                              !serviceTypes.some((st) => st.name === s.serviceType) && (
-                                <option value={s.serviceType}>{s.serviceType}</option>
-                              )}
-                          </select>
+                            <SelectTrigger size="sm" className="h-8 min-w-[9rem]">
+                              <SelectValue placeholder="（未設定）" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__none__">（未設定）</SelectItem>
+                              {serviceTypes.map((st) => (
+                                <SelectItem key={st.id} value={st.name}>
+                                  {st.name}
+                                </SelectItem>
+                              ))}
+                              {s.serviceType &&
+                                !serviceTypes.some((st) => st.name === s.serviceType) && (
+                                  <SelectItem value={s.serviceType}>{s.serviceType}</SelectItem>
+                                )}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
                         <TableCell className="text-center">
                           <input
