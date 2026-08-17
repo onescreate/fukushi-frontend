@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getApiErrorMessage } from '../../lib/errors';
+import { formatDateTime } from '../../lib/format';
+import { clockOrderError } from '../../lib/timeRange';
 import { useManualAttendance, type RosterRow } from './api';
 
 export function ManualAttendanceDialog({
@@ -50,6 +52,13 @@ export function ManualAttendanceDialog({
     e.preventDefault();
     if (!row) return;
     setError('');
+    if (status === 'present') {
+      const orderError = clockOrderError(clockIn, clockOut);
+      if (orderError) {
+        setError(orderError);
+        return;
+      }
+    }
     try {
       await manual.mutateAsync({
         userId: row.userId,
@@ -83,6 +92,18 @@ export function ManualAttendanceDialog({
               {error}
             </div>
           )}
+
+          {/* すでに補正されている場合は、誰がいつ直したかを見せる */}
+          {row?.manualEditedAt && (
+            <div className="rounded-md border border-sky-200 bg-sky-50 px-4 py-2.5 text-xs font-medium text-sky-800">
+              この打刻は管理者が補正しています：
+              {row.manualEditedByName ?? '職員'}（
+              {formatDateTime(row.manualEditedAt)}）
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            保存すると「手修正」として記録され、遅刻・早退は補正後の時刻で判定し直されます。
+          </p>
 
           <div className="space-y-1.5">
             <Label>状態</Label>

@@ -1,4 +1,5 @@
 import { pad } from '@/lib/format';
+import { planOrderError } from '@/lib/timeRange';
 import { useEffect, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import {
@@ -56,6 +57,11 @@ export function BulkScheduleDialog({
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    const orderError = planOrderError(planIn, planOut);
+    if (orderError) {
+      setError(orderError);
+      return;
+    }
     try {
       const res = await bulk.mutateAsync({
         userId,

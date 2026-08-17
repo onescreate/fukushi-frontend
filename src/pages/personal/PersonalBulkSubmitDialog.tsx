@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getApiErrorMessage } from '../../lib/errors';
+import { planOrderError } from '../../lib/timeRange';
 import { useMyBulkSubmit } from '../../features/schedules/myApi';
 
 /** 選択した複数日に、同じ通所時間でまとめて予定を登録するダイアログ。 */
@@ -43,6 +44,11 @@ export function PersonalBulkSubmitDialog({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    const orderError = planOrderError(planIn, planOut);
+    if (orderError) {
+      setError(orderError);
+      return;
+    }
     try {
       const r = await bulk.mutateAsync({
         dates,

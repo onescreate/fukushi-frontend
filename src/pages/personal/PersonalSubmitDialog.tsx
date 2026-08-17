@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { getApiErrorMessage } from '../../lib/errors';
 import { formatDate } from '../../lib/format';
+import { breakOrderError, planOrderError } from '../../lib/timeRange';
 import { useMySubmit } from '../../features/schedules/myApi';
 import type { Schedule } from '../../features/schedules/api';
 
@@ -93,7 +94,9 @@ export function PersonalSubmitDialog({
       setDayType(practice ? 'practice' : 'commute');
       setPracticePlace(practice?.note ?? '');
       setPlanIn(existing?.planIn ?? '10:00');
-      setPlanOut(existing?.planOut ?? '15:00');
+      // 打刻で自動作成された予定は終了時刻が空。ここで既定値(15:00)を入れると
+      // 開始(打刻時刻)より前になり、逆転した予定ができてしまうため空のままにする。
+      setPlanOut(existing ? (existing.planOut ?? '') : '15:00');
       setNote(existing?.note ?? '');
       setBreaks(
         (existing?.details ?? [])
@@ -139,6 +142,20 @@ export function PersonalSubmitDialog({
       setError('実習先を入力してください。');
       return;
     }
+    const orderError = planOrderError(planIn, planOut);
+    if (orderError) {
+      setError(orderError);
+      return;
+    }
+    if (dayType === 'commute') {
+      for (const b of breaks) {
+        const e2 = breakOrderError(b.plannedOut, b.plannedIn);
+        if (e2) {
+          setError(e2);
+          return;
+        }
+      }
+    }
     try {
       const res = await submit.mutateAsync({
         planDate: date,
@@ -179,6 +196,23 @@ export function PersonalSubmitDialog({
           {error && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
               {error}
+            </div>
+          )}
+
+          {/* 却下されている日は、その理由をここで伝える（出し直せば消える） */}
+          {existing?.status === 'rejected' && (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+              <p className="text-sm font-bold text-rose-700">
+                この日の申請は却下されています
+              </p>
+              {existing.rejectReason && (
+                <p className="mt-1 text-sm text-rose-700">
+                  理由：{existing.rejectReason}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-rose-600">
+                内容を直して、もう一度申請してください。
+              </p>
             </div>
           )}
 

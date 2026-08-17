@@ -26,13 +26,15 @@ function mealInfo(meal: Meal | undefined): { text: string; cls: string } | null 
     return { text: '取消申請中', cls: 'bg-amber-100 text-amber-700' };
   if (meal.approvalStatus === 'pending')
     return { text: '予約申請中', cls: 'bg-amber-100 text-amber-700' };
+  // 却下された予約は status が 'reserved' のまま残るため、status より先に判定する
+  // （順序が逆だと「予約済」と表示されてしまう）。
+  if (meal.approvalStatus === 'rejected')
+    return { text: '却下', cls: 'bg-rose-100 text-rose-600' };
   if (meal.status === 'reserved') return { text: '予約済', cls: 'bg-orange-100 text-orange-700' };
   if (meal.status === 'eaten') return { text: '喫食済', cls: 'bg-orange-100 text-orange-700' };
   if (meal.status === 'cancelled')
     return { text: 'キャンセル', cls: 'bg-slate-100 text-slate-500' };
   if (meal.status === 'revoked') return { text: '取消', cls: 'bg-slate-100 text-slate-500' };
-  if (meal.approvalStatus === 'rejected')
-    return { text: '却下', cls: 'bg-slate-100 text-slate-500' };
   return null;
 }
 
@@ -203,6 +205,11 @@ export default function PersonalHistoryPage() {
                   {practice?.note && (
                     <div className="text-[13px] font-bold text-violet-600">
                       実習先：{practice.note}
+                    </div>
+                  )}
+                  {sch.status === 'rejected' && sch.rejectReason && (
+                    <div className="text-[13px] text-rose-600">
+                      却下の理由：{sch.rejectReason}
                     </div>
                   )}
                 </InfoRow>

@@ -30,10 +30,51 @@ export function usePendingCount(enabled = true) {
 export function useDecideSchedule() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, decision }: { id: string; decision: 'approve' | 'reject' }) =>
-      apiClient.patch(`/schedules/${id}/${decision}`).then((r) => r.data),
+    mutationFn: ({
+      id,
+      decision,
+      reason,
+    }: {
+      id: string;
+      decision: 'approve' | 'reject';
+      /** 却下の理由（却下のときのみ・任意）。利用者にそのまま表示される。 */
+      reason?: string;
+    }) =>
+      apiClient
+        .patch(
+          `/schedules/${id}/${decision}`,
+          decision === 'reject' ? { reason } : undefined,
+        )
+        .then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['schedules'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}
+
+/** まとめて承認/却下。処理できた件数と、できなかったものを返す。 */
+export function useBulkDecideSchedules() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      ids,
+      decision,
+      reason,
+    }: {
+      ids: string[];
+      decision: 'approve' | 'reject';
+      reason?: string;
+    }) =>
+      apiClient
+        .patch<{ done: number; failed: { id: string; message: string }[] }>(
+          '/schedules/decide',
+          { ids, decision, reason },
+        )
+        .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['schedules'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
     },
   });
 }

@@ -41,6 +41,10 @@ export interface RosterRow {
   absenceReason: string | null;
   lateReason: string | null;
   earlyLeaveReason: string | null;
+  /** 管理者が手で補正した日時（ISO文字列）。null=打刻そのまま。 */
+  manualEditedAt: string | null;
+  /** 補正した職員の氏名。 */
+  manualEditedByName: string | null;
   meal: { status: 'reserved' | 'eaten' } | null;
 }
 
@@ -92,6 +96,10 @@ export interface AttendanceListRow {
   actOut: string | null;
   status: 'present' | 'absent' | 'notyet';
   reason: string | null;
+  /** 管理者が手で補正した日時（ISO文字列）。null=打刻そのまま。 */
+  manualEditedAt: string | null;
+  /** 補正した職員の氏名。 */
+  manualEditedByName: string | null;
 }
 
 export interface AttendanceListData {

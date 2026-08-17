@@ -1,7 +1,8 @@
 import { pad } from '@/lib/format';
 import { useMemo, useState } from 'react';
 import { useMonthNav } from '@/hooks/useMonthNav';
-import { CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, CalendarPlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { isReversedRange } from '@/lib/timeRange';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -157,7 +158,22 @@ export default function SchedulesPage() {
                     {day}
                   </span>
                   {sch && (
-                    <span className="mt-1 rounded bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary">
+                    // 開始と終了が逆転している予定（過去に保存されたもの）は色を変えて気づけるようにする
+                    <span
+                      title={
+                        isReversedRange(sch.planIn, sch.planOut)
+                          ? '開始と終了が逆になっています。クリックして直してください。'
+                          : undefined
+                      }
+                      className={`mt-1 flex items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-medium ${
+                        isReversedRange(sch.planIn, sch.planOut)
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-primary/10 text-primary'
+                      }`}
+                    >
+                      {isReversedRange(sch.planIn, sch.planOut) && (
+                        <AlertTriangle className="size-3 shrink-0" />
+                      )}
                       {sch.planIn ?? ''}
                       {sch.planIn && sch.planOut ? '〜' : ''}
                       {sch.planOut ?? ''}

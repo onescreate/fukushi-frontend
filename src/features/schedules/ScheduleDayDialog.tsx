@@ -13,7 +13,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, X } from 'lucide-react';
 import { getApiErrorMessage } from '../../lib/errors';
+import { breakOrderError, planOrderError } from '../../lib/timeRange';
 import {
+  breaksOf,
+  practicePlaceOf,
   useAddScheduleDetail,
   useCreateSchedule,
   useDeleteSchedule,
@@ -22,6 +25,8 @@ import {
   type Schedule,
   type ScheduleDetail,
 } from './api';
+
+type DayType = 'commute' | 'practice';
 
 export function ScheduleDayDialog({
   open,
@@ -42,6 +47,8 @@ export function ScheduleDayDialog({
   const addDetail = useAddScheduleDetail();
   const removeDetail = useRemoveScheduleDetail();
 
+  const [dayType, setDayType] = useState<DayType>('commute');
+  const [practicePlace, setPracticePlace] = useState('');
   const [planIn, setPlanIn] = useState('09:00');
   const [planOut, setPlanOut] = useState('16:00');
   const [note, setNote] = useState('');
@@ -53,12 +60,15 @@ export function ScheduleDayDialog({
 
   useEffect(() => {
     if (open) {
+      const place = practicePlaceOf(existing);
+      setDayType(place ? 'practice' : 'commute');
+      setPracticePlace(place ?? '');
       setPlanIn(existing?.planIn ?? '09:00');
-      setPlanOut(existing?.planOut ?? '16:00');
+      // 打刻で自動作成された予定は終了時刻が空。既定値を入れると開始より前になり得るため、
+      // 開始があって終了が無いときは空のままにする（利用者に逆転した予定を作らせない）。
+      setPlanOut(existing ? (existing.planOut ?? '') : '16:00');
       setNote(existing?.note ?? '');
-      setBreaks(
-        (existing?.details ?? []).filter((d) => d.eventType === 'break_out'),
-      );
+      setBreaks(breaksOf(existing));
       setBreakOut('');
       setBreakIn('');
       setBreakNote('');
@@ -69,6 +79,11 @@ export function ScheduleDayDialog({
   const addBreak = async () => {
     if (!existing) return;
     if (!breakOut && !breakIn) return;
+    const orderError = breakOrderError(breakOut, breakIn);
+    if (orderError) {
+      toast.error(orderError);
+      return;
+    }
     try {
       const d = await addDetail.mutateAsync({
         scheduleId: existing.id,
@@ -99,11 +114,27 @@ export function ScheduleDayDialog({
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+    const orderError = planOrderError(planIn, planOut);
+    if (orderError) {
+      setError(orderError);
+      return;
+    }
+    if (dayType === 'practice' && !practicePlace.trim()) {
+      setError('実習先を入力してください。');
+      return;
+    }
+    // 実習にすると中抜けは持たない（利用者の申請画面と同じ扱い）。空文字＝実習を解除。
+    const place = dayType === 'practice' ? practicePlace.trim() : '';
     try {
       if (existing) {
         await update.mutateAsync({
           id: existing.id,
-          data: { planIn, planOut, note: note || undefined },
+          data: {
+            planIn,
+            planOut: planOut || undefined,
+            note: note || undefined,
+            practicePlace: place,
+          },
         });
         toast.success('予定を更新しました');
       } else {
@@ -111,8 +142,9 @@ export function ScheduleDayDialog({
           userId,
           planDate: date,
           planIn,
-          planOut,
+          planOut: planOut || undefined,
           note: note || undefined,
+          practicePlace: place,
         });
         toast.success('予定を登録しました');
       }
@@ -146,6 +178,50 @@ export function ScheduleDayDialog({
               {error}
             </div>
           )}
+          {/* 種別（通所／実習）— 利用者の申請画面と同じ選び方に揃える */}
+          <div className="space-y-1.5">
+            <Label>種別</Label>
+            <div className="inline-flex w-full rounded-lg border bg-muted/50 p-0.5">
+              {(
+                [
+                  ['commute', '通所'],
+                  ['practice', '実習'],
+                ] as const
+              ).map(([v, label]) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setDayType(v)}
+                  className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                    dayType === v
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {dayType === 'practice' && (
+            <div className="space-y-1.5">
+              <Label htmlFor="s-practice">
+                実習先 <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="s-practice"
+                value={practicePlace}
+                onChange={(e) => setPracticePlace(e.target.value)}
+                placeholder="例：〇〇株式会社"
+                maxLength={100}
+              />
+              <p className="text-xs text-muted-foreground">
+                実習の日は中抜けを登録できません（登録済みの中抜けは保存時に消えます）。
+              </p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="s-in">開始時刻</Label>
@@ -175,7 +251,7 @@ export function ScheduleDayDialog({
             />
           </div>
 
-          {existing && (
+          {existing && dayType === 'commute' && (
             <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
               <Label>中抜け（外出・戻り）</Label>
               {breaks.length > 0 && (

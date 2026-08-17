@@ -76,7 +76,8 @@ export interface KioskBoard {
   };
   nextVisit: KioskNextVisit | null;
   alerts: {
-    rejected: { date: string }[];
+    /** 差し戻された予定（却下理由つき） */
+    rejected: { date: string; reason: string | null }[];
     reasonNeeded: { date: string; kind: ReasonKind }[];
   };
   /** 当月の体重が未入力なら true（打刻画面で入力を促す） */

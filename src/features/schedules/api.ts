@@ -19,7 +19,22 @@ export interface Schedule {
   planOut: string | null;
   status: 'pending' | 'approved' | 'rejected';
   note: string | null;
+  /** 却下された理由（承認画面で入力されたもの）。承認・申請中は null。 */
+  rejectReason?: string | null;
   details?: ScheduleDetail[];
+}
+
+/** 予定に紐づく「実習先」を取り出す（実習日でなければ null）。 */
+export function practicePlaceOf(schedule?: Schedule | null): string | null {
+  return (
+    (schedule?.details ?? []).find((d) => d.eventType === 'practice')?.note ??
+    null
+  );
+}
+
+/** 予定に紐づく中抜け（外出→戻り）の一覧。 */
+export function breaksOf(schedule?: Schedule | null): ScheduleDetail[] {
+  return (schedule?.details ?? []).filter((d) => d.eventType === 'break_out');
 }
 
 const KEY = ['schedules'];
@@ -46,6 +61,8 @@ export function useCreateSchedule() {
       planIn?: string;
       planOut?: string;
       note?: string;
+      /** 実習先（値あり=実習日／空文字=通所日に戻す） */
+      practicePlace?: string;
     }) => apiClient.post('/schedules', data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
@@ -59,7 +76,13 @@ export function useUpdateSchedule() {
       data,
     }: {
       id: string;
-      data: { planIn?: string; planOut?: string; note?: string };
+      data: {
+        planIn?: string;
+        planOut?: string;
+        note?: string;
+        /** 実習先（値あり=実習日／空文字=通所日に戻す） */
+        practicePlace?: string;
+      };
     }) => apiClient.patch(`/schedules/${id}`, data).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });

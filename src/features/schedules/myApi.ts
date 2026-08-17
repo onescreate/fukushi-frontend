@@ -68,7 +68,8 @@ export function useMyBulkSubmit() {
 export type ReasonKind = 'absence' | 'late' | 'early';
 
 export interface MyAlerts {
-  rejected: { date: string }[];
+  /** 差し戻された予定（却下理由つき。理由は任意入力なので null あり） */
+  rejected: { date: string; reason: string | null }[];
   reasonNeeded: { date: string; kind: ReasonKind }[];
 }
 

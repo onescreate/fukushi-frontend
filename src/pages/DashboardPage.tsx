@@ -26,8 +26,32 @@ import { useBadges } from '../features/stats/api';
 import { useRoster, type RosterRow } from '../features/attendance/api';
 import { useAdminMealUpsert } from '../features/meals/reservationApi';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
+import { ManualEditBadge } from '../features/attendance/ManualEditBadge';
 import { getApiErrorMessage } from '../lib/errors';
 import { pad } from '../lib/format';
+
+/**
+ * 利用者が申請した内容（実習先・中抜けの時刻と用件）を1行で見せる。
+ * 従来はAPIが返しているのに画面に出ておらず、管理者から見えなかった。
+ */
+function PlanDetails({ row }: { row: RosterRow }) {
+  if (!row.practicePlace && row.breaks.length === 0) return null;
+  return (
+    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      {row.practicePlace && (
+        <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold text-violet-700">
+          実習：{row.practicePlace}
+        </span>
+      )}
+      {row.breaks.map((b, i) => (
+        <span key={i} className="text-[10px] font-medium text-amber-700">
+          中抜け {b.plannedOut ?? '—'}→{b.plannedIn ?? '—'}
+          {b.note && <span className="text-slate-400">（{b.note}）</span>}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /** 今日の集計タイル */
 function CountTile({ icon: Icon, label, value, tone }: {
@@ -181,10 +205,12 @@ export default function DashboardPage() {
                             {isMulti && r.facilityName && (
                               <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
                             )}
+                            <PlanDetails row={r} />
                           </div>
                           <span className="font-mono text-[12px] text-slate-500">
                             {r.clockIn ?? '—'}{r.clockIn || r.clockOut ? '〜' : ''}{r.clockOut ?? ''}
                           </span>
+                          <ManualEditBadge at={r.manualEditedAt} byName={r.manualEditedByName} compact />
                           {r.isLate && <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold text-rose-600">遅刻</span>}
                           {r.isEarlyLeave && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-600">早退</span>}
                           {canEdit && (

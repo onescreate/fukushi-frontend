@@ -22,6 +22,7 @@ export function DetailDialog({
   description,
   rows,
   onEdit,
+  actions,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,6 +30,8 @@ export function DetailDialog({
   description?: string;
   rows: DetailRow[];
   onEdit?: () => void;
+  /** 「閉じる」の右に置く任意のボタン群（承認/却下など）。 */
+  actions?: ReactNode;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,6 +56,7 @@ export function DetailDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             閉じる
           </Button>
+          {actions}
           {onEdit && <Button onClick={onEdit}>編集</Button>}
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMonthNav } from '@/hooks/useMonthNav';
-import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,7 +20,9 @@ import {
   type RosterRow,
 } from '../features/attendance/api';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
+import { ManualEditBadge } from '../features/attendance/ManualEditBadge';
 import { formatDate } from '../lib/format';
+import { isReversedRange } from '../lib/timeRange';
 
 const toRosterRow = (r: AttendanceListRow): RosterRow => ({
   userId: r.userId,
@@ -39,8 +41,37 @@ const toRosterRow = (r: AttendanceListRow): RosterRow => ({
   absenceReason: r.status === 'absent' ? r.reason : null,
   lateReason: null,
   earlyLeaveReason: null,
+  manualEditedAt: r.manualEditedAt,
+  manualEditedByName: r.manualEditedByName,
   meal: null,
 });
+
+/**
+ * 開始〜終了の表示。逆転している（終了が開始より前）データには警告マークを付ける。
+ * 過去に保存されてしまった逆転データを、消さずに気づけるようにするため。
+ */
+function TimeRangeCell({
+  from,
+  to,
+}: {
+  from: string | null;
+  to: string | null;
+}) {
+  const reversed = isReversedRange(from, to);
+  return (
+    <span
+      className={reversed ? 'font-semibold text-amber-700' : undefined}
+      title={reversed ? '開始と終了が逆になっています。編集して直してください。' : undefined}
+    >
+      {from ?? '—'}
+      {from || to ? '〜' : ''}
+      {to ?? ''}
+      {reversed && (
+        <AlertTriangle className="ml-1 inline size-3.5 align-text-top text-amber-600" />
+      )}
+    </span>
+  );
+}
 
 function StatusBadge({ status }: { status: AttendanceListRow['status'] }) {
   const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
@@ -118,14 +149,16 @@ export default function AttendanceListPage() {
                       <TableCell className="text-xs text-muted-foreground">{r.facilityName ?? '—'}</TableCell>
                     )}
                     <TableCell className="font-mono text-xs text-muted-foreground">
-                      {r.planIn ?? '—'}
-                      {r.planIn || r.planOut ? '〜' : ''}
-                      {r.planOut ?? ''}
+                      <TimeRangeCell from={r.planIn} to={r.planOut} />
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {r.actIn ?? '—'}
-                      {r.actIn || r.actOut ? '〜' : ''}
-                      {r.actOut ?? ''}
+                    <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1.5">
+                        <TimeRangeCell from={r.actIn} to={r.actOut} />
+                        <ManualEditBadge
+                          at={r.manualEditedAt}
+                          byName={r.manualEditedByName}
+                        />
+                      </span>
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={r.status} />

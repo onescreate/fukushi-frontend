@@ -543,7 +543,12 @@ export default function KioskPage() {
                 key={`rej-${r.date}`}
                 className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
               >
-                {r.date} の予定申請が差し戻されました。個人ページから再申請してください。
+                <p>
+                  {r.date} の予定申請が差し戻されました。個人ページから再申請してください。
+                </p>
+                {r.reason && (
+                  <p className="mt-1 font-bold">理由：{r.reason}</p>
+                )}
               </div>
             ))}
             {alerts!.reasonNeeded.map((n) => (

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Building2,
   CalendarClock,
+  CheckCheck,
   ClipboardList,
   Compass,
   ListChecks,
@@ -18,7 +19,8 @@ const TOC: { id: string; label: string }[] = [
   { id: 'flow', label: '2. 業務の流れ' },
   { id: 'setup', label: '3. 初期設定の手順' },
   { id: 'kiosk', label: '4. タブレットで打刻する' },
-  { id: 'faq', label: '5. 困ったとき（Q&A）' },
+  { id: 'approve', label: '5. 承認と打刻の補正' },
+  { id: 'faq', label: '6. 困ったとき（Q&A）' },
 ];
 
 const B = ({ children }: { children: ReactNode }) => (
@@ -188,8 +190,8 @@ export default function HelpPage() {
                 items={[
                   <>朝、<PageLink to="/approvals">予定承認</PageLink>・<PageLink to="/meal-approvals">食事承認</PageLink>の申請を確認</>,
                   <>利用者がタブレットで<B>PIN打刻</B>（出勤・退勤）</>,
-                  <><PageLink to="/roster">当日ロースター</PageLink>で通所状況・未打刻・遅刻/早退を確認・補正</>,
-                  <>食事の<B>喫食</B>を記録（ロースター）</>,
+                  <><PageLink to="/">ダッシュボード</PageLink>の「今日の来所」で通所状況・未打刻・遅刻/早退を確認・補正</>,
+                  <>食事の<B>喫食</B>を記録（ダッシュボードの「喫食者」）</>,
                   <><PageLink to="/meal-deliveries">食事納品</PageLink>の数量を記録</>,
                   <>必要に応じて<PageLink to="/health-records">健康記録</PageLink>（体重・BMI）</>,
                   <><PageLink to="/closing-operations">締め業務</PageLink>でその日の実績・加算を記録</>,
@@ -270,9 +272,71 @@ export default function HelpPage() {
             </div>
           </section>
 
-          {/* 5. FAQ */}
+          {/* 5. 承認と打刻の補正 */}
+          <section id="approve" className="scroll-mt-6">
+            <SectionHeader icon={CheckCheck} title="5. 承認と打刻の補正" />
+            <div className="space-y-5">
+              <div className="rounded-xl border border-[#ECEDF1] bg-white p-5 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                <p className="mb-2 text-[12px] font-black text-slate-700">
+                  ■ 予定をまとめて承認・却下する（<PageLink to="/approvals">予定承認</PageLink>）
+                </p>
+                <Steps
+                  items={[
+                    <>各行の<B>チェックボックス</B>で選びます（見出しのチェックで全件選択）。</>,
+                    <>上に出るバーの<B>まとめて承認</B>／<B>まとめて却下</B>を押します。</>,
+                    <><B>却下</B>のときは理由を入力できます（任意）。理由は<B>利用者の画面にそのまま表示</B>されます。</>,
+                    <>1件だけ処理したいときは、その行の<B>承認</B>／<B>却下</B>ボタンを押します。</>,
+                  ]}
+                />
+                <p className="mb-2 mt-4 text-[12px] font-black text-slate-700">
+                  ■ 利用者が申請した内容を確認する
+                </p>
+                <p className="text-[13px] leading-relaxed text-slate-600">
+                  一覧の<B>行をクリック</B>すると、申請内容がすべて表示されます —
+                  <B>種別（通所／実習）</B>・<B>実習先</B>・<B>時間</B>・
+                  <B>中抜けの時刻と用件</B>（通院：精神科／ハローワーク：失業認定日 など）・<B>連絡事項</B>。
+                  そのまま承認・却下もできます。実習先と中抜けは
+                  <PageLink to="/">ダッシュボード</PageLink>の「今日の来所」にも表示されます。
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#ECEDF1] bg-white p-5 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                <p className="mb-2 text-[12px] font-black text-slate-700">
+                  ■ 管理者が実習の予定を入れる（<PageLink to="/schedules">通所予定</PageLink>）
+                </p>
+                <p className="text-[13px] leading-relaxed text-slate-600">
+                  利用者を選んでカレンダーの日付をクリックし、<B>種別</B>で「実習」を選んで<B>実習先</B>を入力します。
+                  実習の日は中抜けを持ちません（登録済みの中抜けは保存時に消えます）。
+                  「通所」に戻すと実習の登録は解除されます。
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#ECEDF1] bg-white p-5 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                <p className="mb-2 text-[12px] font-black text-slate-700">
+                  ■ 打刻を補正する（<PageLink to="/attendance-list">打刻データ一覧</PageLink>・ダッシュボード）
+                </p>
+                <Steps
+                  items={[
+                    <>鉛筆アイコンから<B>打刻の補正</B>を開き、通所・退所の時刻や欠席、理由を直します。</>,
+                    <>保存すると<B>手修正</B>のマークが付きます。マークにカーソルを合わせると<B>誰が・いつ</B>直したかが出ます。</>,
+                    <>補正した時刻で<B>遅刻・早退は自動で判定し直されます</B>（未打刻を後から入れた場合も正しく反映されます）。</>,
+                  ]}
+                />
+              </div>
+
+              <Note type="warning" title="時刻の前後が逆のデータ">
+                「終了が開始より前」（例 15:26〜15:00）は保存できません。
+                すでに保存されている古いデータには<B>⚠️のマーク</B>が付きます
+                （<PageLink to="/attendance-list">打刻データ一覧</PageLink>・
+                <PageLink to="/schedules">通所予定</PageLink>・
+                <PageLink to="/approvals">予定承認</PageLink>）。見つけたら開いて直してください。
+              </Note>
+            </div>
+          </section>
+
+          {/* 6. FAQ */}
           <section id="faq" className="scroll-mt-6">
-            <SectionHeader icon={Compass} title="5. 困ったとき（Q&A）" />
+            <SectionHeader icon={Compass} title="6. 困ったとき（Q&A）" />
             <div className="space-y-3">
               {[
                 { q: 'メニューに「法人管理」などが出ない', a: 'あなたの権限では使えない機能です。見えるメニューが操作できる範囲です。' },
@@ -280,6 +344,11 @@ export default function HelpPage() {
                 { q: '職員／利用者がパスワード（PIN）を忘れた', a: '管理者が「職員管理」「利用者管理」の一覧の鍵・錠アイコンから再設定できます。' },
                 { q: 'タブレットで「端末が登録されていません」と出る', a: '端末トークンが不正か端末が削除されています。「端末管理」で登録し直してください。' },
                 { q: '当月のKPIがダッシュボードに出ない', a: 'ヘッダー右上で特定の店舗を選んでください。「全店舗」表示中は集計を出しません。' },
+                { q: '利用者が申請した中抜けの用件や実習先はどこで見られる？', a: '「予定承認」で行をクリックすると申請内容がすべて出ます。当日分はダッシュボードの「今日の来所」にも表示されます。' },
+                { q: '予定を却下した理由は利用者に伝わる？', a: '伝わります。却下時に入力した理由が、利用者のその日の申請画面・履歴・打刻タブレットの差戻メッセージに表示されます。' },
+                { q: '食事の申請を却下したのに利用者の画面が「予約済」のまま', a: '表示の不具合でした。修正済みで、いまは「却下」と表示されます。請求や発注数には最初から含まれていません。' },
+                { q: '時刻が「15:26〜15:00」のように逆になっている', a: '古いデータです。⚠️マークの付いた行を開いて正しい時刻に直してください。新しく逆の時刻を保存することはできません。' },
+                { q: '「手修正」のマークは何？', a: '管理者が打刻を手で直した記録です。マークにカーソルを合わせると、直した職員の名前と日時が表示されます。' },
               ].map((f, i) => (
                 <div key={i} className="rounded-lg border border-[#ECEDF1] bg-white px-4 py-3">
                   <p className="text-[13px] font-bold text-slate-800">Q. {f.q}</p>
