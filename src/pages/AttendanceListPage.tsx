@@ -21,6 +21,7 @@ import {
 } from '../features/attendance/api';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
 import { ManualEditBadge } from '../features/attendance/ManualEditBadge';
+import { PlanDetails } from '../features/schedules/PlanDetails';
 import { formatDate } from '../lib/format';
 import { isReversedRange } from '../lib/timeRange';
 
@@ -31,8 +32,8 @@ const toRosterRow = (r: AttendanceListRow): RosterRow => ({
   planIn: r.planIn,
   planOut: r.planOut,
   scheduleStatus: null,
-  practicePlace: null,
-  breaks: [],
+  practicePlace: r.practicePlace,
+  breaks: r.breaks,
   clockIn: r.actIn,
   clockOut: r.actOut,
   status: r.status,
@@ -148,8 +149,13 @@ export default function AttendanceListPage() {
                     {isMulti && (
                       <TableCell className="text-xs text-muted-foreground">{r.facilityName ?? '—'}</TableCell>
                     )}
-                    <TableCell className="font-mono text-xs text-muted-foreground">
+                    <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
                       <TimeRangeCell from={r.planIn} to={r.planOut} />
+                      <PlanDetails
+                        practicePlace={r.practicePlace}
+                        breaks={r.breaks}
+                        compact
+                      />
                     </TableCell>
                     <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5">

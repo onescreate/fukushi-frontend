@@ -27,31 +27,9 @@ import { useRoster, type RosterRow } from '../features/attendance/api';
 import { useAdminMealUpsert } from '../features/meals/reservationApi';
 import { ManualAttendanceDialog } from '../features/attendance/ManualAttendanceDialog';
 import { ManualEditBadge } from '../features/attendance/ManualEditBadge';
+import { PlanDetails } from '../features/schedules/PlanDetails';
 import { getApiErrorMessage } from '../lib/errors';
 import { pad } from '../lib/format';
-
-/**
- * 利用者が申請した内容（実習先・中抜けの時刻と用件）を1行で見せる。
- * 従来はAPIが返しているのに画面に出ておらず、管理者から見えなかった。
- */
-function PlanDetails({ row }: { row: RosterRow }) {
-  if (!row.practicePlace && row.breaks.length === 0) return null;
-  return (
-    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-      {row.practicePlace && (
-        <span className="rounded bg-violet-100 px-1.5 py-0.5 text-[10px] font-bold text-violet-700">
-          実習：{row.practicePlace}
-        </span>
-      )}
-      {row.breaks.map((b, i) => (
-        <span key={i} className="text-[10px] font-medium text-amber-700">
-          中抜け {b.plannedOut ?? '—'}→{b.plannedIn ?? '—'}
-          {b.note && <span className="text-slate-400">（{b.note}）</span>}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 /** 今日の集計タイル */
 function CountTile({ icon: Icon, label, value, tone }: {
@@ -205,7 +183,10 @@ export default function DashboardPage() {
                             {isMulti && r.facilityName && (
                               <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
                             )}
-                            <PlanDetails row={r} />
+                            <PlanDetails
+                              practicePlace={r.practicePlace}
+                              breaks={r.breaks}
+                            />
                           </div>
                           <span className="font-mono text-[12px] text-slate-500">
                             {r.clockIn ?? '—'}{r.clockIn || r.clockOut ? '〜' : ''}{r.clockOut ?? ''}
@@ -265,6 +246,50 @@ export default function DashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* まだ来ていない人（未打刻）。朝いちばんに「今日は実習」「昼に通院で中抜け」を
+                  把握できるよう、打刻前でも予定の内訳を出す。 */}
+              {notYet.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/40 shadow-[0_1px_2px_rgba(20,20,28,.04)]">
+                  <div className="flex items-center justify-between border-b border-amber-100 px-4 py-2.5">
+                    <p className="text-[13px] font-bold text-amber-700">
+                      まだ来ていない人（今日の予定）
+                    </p>
+                    <span className="text-[12px] font-bold text-amber-400">
+                      {notYet.length} 名
+                    </span>
+                  </div>
+                  <div className="max-h-72 divide-y divide-amber-100 overflow-y-auto">
+                    {notYet.map((r) => (
+                      <div key={r.userId} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-bold text-slate-800">{r.name}</p>
+                          {isMulti && r.facilityName && (
+                            <p className="truncate text-[10px] font-medium text-slate-400">{r.facilityName}</p>
+                          )}
+                          <PlanDetails
+                            practicePlace={r.practicePlace}
+                            breaks={r.breaks}
+                          />
+                        </div>
+                        <span className="shrink-0 font-mono text-[12px] text-slate-500">
+                          {r.planIn ?? '—'}{r.planIn || r.planOut ? '〜' : ''}{r.planOut ?? ''}
+                        </span>
+                        {r.scheduleStatus === 'pending' && (
+                          <span className="shrink-0 rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                            承認待ち
+                          </span>
+                        )}
+                        {canEdit && (
+                          <button onClick={() => setEditing(r)} title="打刻を入力・欠席にする" className="flex size-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white hover:text-indigo-600">
+                            <Pencil className="size-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* 遅刻・早退リスト */}
               {lateEarly.length > 0 && (

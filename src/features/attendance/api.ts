@@ -96,6 +96,10 @@ export interface AttendanceListRow {
   actOut: string | null;
   status: 'present' | 'absent' | 'notyet';
   reason: string | null;
+  /** 実習先（実習日のみ。null=通常の通所） */
+  practicePlace: string | null;
+  /** 中抜け（外出→戻り・用件つき） */
+  breaks: RosterBreak[];
   /** 管理者が手で補正した日時（ISO文字列）。null=打刻そのまま。 */
   manualEditedAt: string | null;
   /** 補正した職員の氏名。 */
