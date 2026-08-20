@@ -20,6 +20,7 @@ import {
   type MealWithUser,
 } from '../features/meals/reservationApi';
 import { MealAdminDialog } from '../features/meals/MealAdminDialog';
+import { UserNameFilter, matchesName } from '../components/UserNameFilter';
 import { hasPermission, useMe } from '../features/auth/useMe';
 import { formatDate, pad, yen } from '../lib/format';
 
@@ -52,6 +53,14 @@ export default function MealReservationsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MealWithUser | null>(null);
+  // 利用者名で絞り込む（1か月分は行数が多く、目的の人を探しづらいため）
+  const [nameQuery, setNameQuery] = useState('');
+
+  const allMeals = useMemo(() => meals ?? [], [meals]);
+  const rows = useMemo(
+    () => allMeals.filter((m) => matchesName(m.userName, nameQuery)),
+    [allMeals, nameQuery],
+  );
 
   const facilityUsers = useMemo(
     () =>
@@ -82,18 +91,25 @@ export default function MealReservationsPage() {
           </Button>
         </div>
 
-        {singleFacilityId && canManage && (
-          <Button
-            className="ml-auto"
-            onClick={() => {
-              setEditing(null);
-              setDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-1.5 size-4" />
-            予約を追加
-          </Button>
-        )}
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <UserNameFilter
+            value={nameQuery}
+            onChange={setNameQuery}
+            matched={rows.length}
+            total={allMeals.length}
+          />
+          {singleFacilityId && canManage && (
+            <Button
+              onClick={() => {
+                setEditing(null);
+                setDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-1.5 size-4" />
+              予約を追加
+            </Button>
+          )}
+        </div>
       </div>
 
       {facilityId && (
@@ -116,14 +132,16 @@ export default function MealReservationsPage() {
                     読み込み中…
                   </TableCell>
                 </TableRow>
-              ) : (meals ?? []).length === 0 ? (
+              ) : rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isMulti ? 6 : 5} className="py-10 text-center text-muted-foreground">
-                    この月の食事予約はありません。
+                    {allMeals.length > 0
+                      ? `「${nameQuery}」に一致する利用者の予約はありません。`
+                      : 'この月の食事予約はありません。'}
                   </TableCell>
                 </TableRow>
               ) : (
-                (meals ?? []).map((m) => {
+                rows.map((m) => {
                   const badge = approvalBadge(m);
                   return (
                     <TableRow

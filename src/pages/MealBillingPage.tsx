@@ -178,7 +178,10 @@ export default function MealBillingPage() {
       month: String(month),
       ...(userId ? { userId } : {}),
     });
-    window.open(`/meal-billing/print?${q.toString()}`, '_blank');
+    // このアプリは会計ポータルと同一オリジンの /fukushi 配下で配信されるため、
+    // ベースパスを必ず前置する（'/meal-billing/print' だけだとポータル側を開いてしまい請求書が出ない）。
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    window.open(`${base}/meal-billing/print?${q.toString()}`, '_blank');
   };
 
   return (

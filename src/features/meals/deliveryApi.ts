@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../lib/apiClient';
 
 export interface DeliveryDay {
+  /** 発注数（予約＋喫食済＋キャンセル。キャンセルも食事は届くため含む） */
   orderCount: number;
+  /** 発注数のうちキャンセル分（内訳表示用） */
+  cancelledCount: number;
   deliveryCount: number | null;
   note: string | null;
 }

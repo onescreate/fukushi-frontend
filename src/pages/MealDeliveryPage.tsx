@@ -81,7 +81,7 @@ export default function MealDeliveryPage() {
     <div>
       <PageHeader
         title="食事の注文・納品"
-        description="日ごとの発注数（承認済みの予約食数）と実納品数を管理します。差分・未入力を確認できます。"
+        description="日ごとの発注数（承認済みの予約食数。締切後のキャンセルも食事は届くため含みます）と実納品数を管理します。差分・未入力を確認できます。"
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -131,6 +131,7 @@ export default function MealDeliveryPage() {
                 const ds = `${year}-${pad(month)}-${pad(day)}`;
                 const d = data?.days[ds];
                 const orderCount = d?.orderCount ?? 0;
+                const cancelledCount = d?.cancelledCount ?? 0;
                 const hasOrder = orderCount > 0;
                 const deliveryCount = d?.deliveryCount ?? null;
                 const delivered = deliveryCount != null;
@@ -152,7 +153,14 @@ export default function MealDeliveryPage() {
                     <span className="text-xs font-medium text-slate-700">{day}</span>
                     {(hasOrder || delivered) && (
                       <div className="mt-1 space-y-0.5 text-[10px] leading-tight">
-                        <div className="text-slate-500">発注 {orderCount}</div>
+                        <div className="text-slate-500">
+                          発注 {orderCount}
+                          {cancelledCount > 0 && (
+                            <span className="ml-1 text-rose-500">
+                              (取{cancelledCount})
+                            </span>
+                          )}
+                        </div>
                         <div className={delivered ? 'text-slate-700' : 'text-amber-600'}>
                           納品 {delivered ? deliveryCount : '未'}
                         </div>
@@ -223,6 +231,8 @@ export default function MealDeliveryPage() {
             <DialogTitle>納品数の入力</DialogTitle>
             <DialogDescription>
               {editDate ? formatDate(editDate) : ''}・発注 {editDay?.orderCount ?? 0} 食
+              {(editDay?.cancelledCount ?? 0) > 0 &&
+                `（うちキャンセル ${editDay?.cancelledCount} 食。キャンセルでも食事は届くため発注数に含みます）`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

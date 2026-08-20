@@ -21,6 +21,7 @@ import {
 } from '../features/schedules/approvalApi';
 import { RejectReasonDialog } from '../features/schedules/RejectReasonDialog';
 import { breaksOf, practicePlaceOf } from '../features/schedules/api';
+import { UserNameFilter, matchesName } from '../components/UserNameFilter';
 import { getApiErrorMessage } from '../lib/errors';
 import { formatDate } from '../lib/format';
 import { isReversedRange } from '../lib/timeRange';
@@ -68,8 +69,15 @@ export default function ApprovalsPage() {
   const [detail, setDetail] = useState<PendingSchedule | null>(null);
   // 却下の理由入力。ids に入れた予定をまとめて却下する。
   const [rejecting, setRejecting] = useState<string[] | null>(null);
+  // 利用者名で絞り込む（申請が多いときに目的の人を探しやすくする）
+  const [nameQuery, setNameQuery] = useState('');
 
-  const rows = useMemo(() => data ?? [], [data]);
+  const allRows = useMemo(() => data ?? [], [data]);
+  // 絞り込み後の一覧。まとめて承認/却下も「いま表示されている行」だけを対象にする。
+  const rows = useMemo(
+    () => allRows.filter((s) => matchesName(userName(s), nameQuery)),
+    [allRows, nameQuery],
+  );
   const busy = decide.isPending || bulkDecide.isPending;
   // 表示中の行だけを選択対象にする（承認して消えた行の選択は無視する）
   const selectedIds = rows.map((r) => r.id).filter((id) => selected.has(id));
@@ -160,6 +168,14 @@ export default function ApprovalsPage() {
       <PageHeader
         title="予定承認"
         description="利用者から申請された予定を承認・却下します。行をクリックすると申請内容を確認できます。"
+        action={
+          <UserNameFilter
+            value={nameQuery}
+            onChange={setNameQuery}
+            matched={rows.length}
+            total={allRows.length}
+          />
+        }
       />
 
       {/* まとめて処理のバー（選択があるときだけ出す） */}
@@ -230,7 +246,9 @@ export default function ApprovalsPage() {
             {!isLoading && rows.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  承認待ちの予定はありません。
+                  {allRows.length > 0
+                    ? `「${nameQuery}」に一致する利用者の申請はありません。`
+                    : '承認待ちの予定はありません。'}
                 </TableCell>
               </TableRow>
             )}

@@ -35,6 +35,7 @@ function formatJDate(ds: string): string {
   return `${y}年${m}月${d}日`;
 }
 
+/** 自動判定の表示（食事提供＝喫食実績から自動。手では変えられない）。 */
 function Check({ on }: { on: boolean }) {
   return on ? (
     <span className="inline-flex size-5 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
@@ -42,6 +43,46 @@ function Check({ on }: { on: boolean }) {
     </span>
   ) : (
     <span className="text-muted-foreground">—</span>
+  );
+}
+
+/**
+ * 加算のチェック（クリックで付け外し）。
+ * 以前は「✓ か —」だけで押せると分からなかったため、四角い枠のチェックボックスにして
+ * 見た目で編集できると分かるようにする。印刷にも枠と✓がそのまま出る。
+ */
+function FlagCheckbox({
+  on,
+  label,
+  disabled,
+  onToggle,
+}: {
+  on: boolean;
+  label: string;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={on}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onToggle}
+      title={disabled ? undefined : `${label}を${on ? '外す' : '付ける'}`}
+      className={`mx-auto flex size-6 items-center justify-center rounded-md border-2 text-sm font-black transition-colors ${
+        on
+          ? 'border-emerald-500 text-emerald-600'
+          : 'border-slate-300 text-transparent'
+      } ${
+        disabled
+          ? 'cursor-default opacity-60'
+          : 'cursor-pointer hover:border-emerald-500 hover:bg-emerald-50'
+      }`}
+    >
+      ✓
+    </button>
   );
 }
 
@@ -56,7 +97,7 @@ export default function ClosingOperationsPage() {
   const save = useSaveClosingOperation();
 
   const toggle = async (r: ClosingRow, key: ClosingFlag) => {
-    if (!singleFacilityId) return; // 単一店舗選択時のみ入力可
+    // 店舗を1つに絞っていなくても入力できる（サーバー側で利用者ごとに操作権限を検証している）。
     try {
       await save.mutateAsync({
         userId: r.userId,
@@ -98,9 +139,13 @@ export default function ClosingOperationsPage() {
 
         {!singleFacilityId && (
           <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
-            複数店舗の実績を表示しています（閲覧のみ）。加算を入力するにはヘッダーで店舗を1つ選択してください。
+            複数店舗の実績をまとめて表示しています。加算のチェックはこのままでも入力できます。
           </div>
         )}
+        <p className="mb-4 text-[12px] font-medium text-slate-400">
+          加算（地域連携会議・移行準備支援・欠席時対応）は<span className="font-bold text-slate-600">□をクリック</span>して付け外しします（その場で保存）。
+          食事提供は喫食の記録から自動で付きます。
+        </p>
       </div>
 
       {facilityId && (
@@ -118,7 +163,10 @@ export default function ClosingOperationsPage() {
                 {isMulti && <TableHead>店舗</TableHead>}
                 <TableHead>予定時間</TableHead>
                 <TableHead>打刻時間</TableHead>
-                <TableHead className="text-center">食事提供</TableHead>
+                <TableHead className="text-center">
+                  食事提供
+                  <span className="ml-1 text-[10px] font-normal text-slate-400">自動</span>
+                </TableHead>
                 {FLAGS.map((f) => (
                   <TableHead key={f.key} className="text-center">
                     {f.label}
@@ -174,15 +222,12 @@ export default function ClosingOperationsPage() {
                     </TableCell>
                     {FLAGS.map((f) => (
                       <TableCell key={f.key} className="text-center">
-                        <button
-                          type="button"
-                          disabled={!singleFacilityId || save.isPending}
-                          onClick={() => toggle(r, f.key)}
-                          className="disabled:cursor-default"
-                          title={!singleFacilityId ? '' : 'クリックで切替'}
-                        >
-                          <Check on={r[f.key]} />
-                        </button>
+                        <FlagCheckbox
+                          on={r[f.key]}
+                          label={`${r.userName} の${f.label}`}
+                          disabled={save.isPending}
+                          onToggle={() => toggle(r, f.key)}
+                        />
                       </TableCell>
                     ))}
                   </TableRow>
