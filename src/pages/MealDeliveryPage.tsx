@@ -55,7 +55,8 @@ export default function MealDeliveryPage() {
     if (!editDate) return;
     try {
       await setDelivery.mutateAsync({
-        facilityId,
+        // 納品は店舗×日なので、必ず実際の店舗IDを送る（'all' は送らない）
+        facilityId: singleFacilityId ?? '',
         date: editDate,
         deliveryCount: Number(countInput) || 0,
         note: noteInput,

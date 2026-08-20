@@ -41,7 +41,8 @@ export default function AttendanceSettingsPage() {
   const save = async () => {
     try {
       await update.mutateAsync({
-        facilityId,
+        // 店舗ごとの設定なので、必ず実際の店舗IDを送る（'all' は送らない）
+        facilityId: singleFacilityId ?? '',
         lateGraceMinutes: Number(late) || 0,
         earlyLeaveGraceMinutes: Number(early) || 0,
       });

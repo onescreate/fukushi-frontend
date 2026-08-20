@@ -74,10 +74,14 @@ export function FacilityProvider({ children }: { children: ReactNode }) {
 
   const allIds = facilities.map((f) => f.id);
   const isAll = facilities.length > 0 && selectedIds.length === facilities.length;
-  const resolvedCount = isAll ? facilities.length : selectedIds.length;
-  const isMulti = resolvedCount > 1;
-  const singleFacilityId =
-    !isAll && selectedIds.length === 1 ? selectedIds[0] : null;
+  // 実際に表示対象となる店舗（「全店舗」選択時は自分がアクセスできる全店舗）
+  const effectiveIds = isAll || selectedIds.length === 0 ? allIds : selectedIds;
+  const isMulti = effectiveIds.length > 1;
+  // 表示対象が結果的に1店舗なら、店舗単位の操作（食事の追加/編集・料金や請求書の設定・
+  // お知らせ・納品入力）を有効にする。
+  // ※ 担当店舗が1つだけの職員は「全店舗＝その1店舗」となり isAll が true になるため、
+  //   以前は singleFacilityId が null になり、これらの操作が一切できなくなっていた。
+  const singleFacilityId = effectiveIds.length === 1 ? effectiveIds[0] : null;
   const facilityParam =
     isAll || selectedIds.length === 0 ? ALL_FACILITIES : selectedIds.join(',');
 

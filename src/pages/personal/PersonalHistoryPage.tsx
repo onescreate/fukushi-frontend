@@ -267,6 +267,12 @@ export default function PersonalHistoryPage() {
                   <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold ${meal.cls}`}>
                     {meal.text}
                   </span>
+                  {/* 却下された申請は、職員が入力した理由をそのまま伝える（予定と同じ扱い） */}
+                  {d.meal?.approvalStatus === 'rejected' && d.meal.rejectReason && (
+                    <div className="text-[13px] text-rose-600">
+                      却下の理由：{d.meal.rejectReason}
+                    </div>
+                  )}
                 </InfoRow>
               )}
             </Card>

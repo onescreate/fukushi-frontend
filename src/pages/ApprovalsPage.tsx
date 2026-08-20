@@ -19,7 +19,7 @@ import {
   usePendingSchedules,
   type PendingSchedule,
 } from '../features/schedules/approvalApi';
-import { RejectReasonDialog } from '../features/schedules/RejectReasonDialog';
+import { RejectReasonDialog } from '../components/RejectReasonDialog';
 import { breaksOf, practicePlaceOf } from '../features/schedules/api';
 import { UserNameFilter, matchesName } from '../components/UserNameFilter';
 import { getApiErrorMessage } from '../lib/errors';

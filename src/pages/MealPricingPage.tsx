@@ -50,7 +50,7 @@ export default function MealPricingPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      await del.mutateAsync({ facilityId, id: deleting.id });
+      await del.mutateAsync({ facilityId: singleFacilityId ?? '', id: deleting.id });
       toast.success('食事料金を削除しました');
       setDeleting(null);
     } catch (err) {
@@ -163,7 +163,7 @@ export default function MealPricingPage() {
       <MealPricingFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        facilityId={facilityId}
+        facilityId={singleFacilityId ?? ''}
         target={editing}
       />
 

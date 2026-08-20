@@ -35,7 +35,7 @@ export default function AnnouncementsPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      await del.mutateAsync({ facilityId, id: deleting.id });
+      await del.mutateAsync({ facilityId: singleFacilityId ?? '', id: deleting.id });
       toast.success('お知らせを削除しました');
       setDeleting(null);
     } catch (err) {
@@ -116,7 +116,7 @@ export default function AnnouncementsPage() {
       <AnnouncementFormDialog
         open={formOpen}
         onOpenChange={setFormOpen}
-        facilityId={facilityId}
+        facilityId={singleFacilityId ?? ''}
         target={editing}
       />
 

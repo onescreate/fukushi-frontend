@@ -11,16 +11,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-/** よく使う却下理由（ボタンで入力欄に入る）。 */
-const PRESETS = [
+/** 予定承認でよく使う却下理由。 */
+export const SCHEDULE_REJECT_PRESETS = [
   '定員に空きがありません',
   '時間の変更をお願いします',
   '事前にご相談ください',
   '内容を確認したいので職員までご連絡ください',
 ];
 
+/** 食事承認でよく使う却下理由。 */
+export const MEAL_REJECT_PRESETS = [
+  '食事の申込み締切を過ぎています',
+  'この日は食事の提供がありません',
+  '通所予定を先に申請してください',
+  '内容を確認したいので職員までご連絡ください',
+];
+
 /**
- * 予定を却下するときの理由入力。
+ * 申請を却下するときの理由入力（予定承認・食事承認で共通）。
  * 理由は利用者の画面にそのまま表示されるため、空のままでも却下できる（任意）。
  */
 export function RejectReasonDialog({
@@ -29,6 +37,9 @@ export function RejectReasonDialog({
   count,
   busy,
   onSubmit,
+  targetLabel = '予定',
+  presets = SCHEDULE_REJECT_PRESETS,
+  placeholder = '例：この日は定員に空きがありません',
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,6 +47,11 @@ export function RejectReasonDialog({
   count: number;
   busy: boolean;
   onSubmit: (reason: string) => void;
+  /** 「〇〇を却下します」の〇〇（例: 予定 / 食事の申請） */
+  targetLabel?: string;
+  /** よく使う理由のボタン */
+  presets?: string[];
+  placeholder?: string;
 }) {
   const [reason, setReason] = useState('');
 
@@ -54,7 +70,7 @@ export function RejectReasonDialog({
         <DialogHeader>
           <DialogTitle>却下の理由</DialogTitle>
           <DialogDescription>
-            {count}件の予定を却下します。理由は利用者の画面にそのまま表示されます（任意）。
+            {count}件の{targetLabel}を却下します。理由は利用者の画面にそのまま表示されます（任意）。
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
@@ -64,13 +80,13 @@ export function RejectReasonDialog({
               id="reject-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="例：この日は定員に空きがありません"
+              placeholder={placeholder}
               maxLength={200}
               autoFocus
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {PRESETS.map((p) => (
+            {presets.map((p) => (
               <button
                 key={p}
                 type="button"

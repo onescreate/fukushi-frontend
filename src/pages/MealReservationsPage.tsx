@@ -62,12 +62,13 @@ export default function MealReservationsPage() {
     [allMeals, nameQuery],
   );
 
+  // 「予約を追加」で選べる利用者は、いま表示している1店舗の利用者だけ
   const facilityUsers = useMemo(
     () =>
       (allUsers ?? [])
-        .filter((u) => u.facilityId === facilityId)
+        .filter((u) => u.facilityId === singleFacilityId)
         .map((u) => ({ id: u.id, name: `${u.lastName} ${u.firstName}` })),
-    [allUsers, facilityId],
+    [allUsers, singleFacilityId],
   );
 
 
@@ -169,7 +170,11 @@ export default function MealReservationsPage() {
                           {badge.text}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{yen(m.amount)}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {/* 却下された申請は食事が提供されないので金額は出さない
+                            （修正前に却下した分は金額が残っているため、表示側でも0扱いにする） */}
+                        {m.approvalStatus === 'rejected' ? '—' : yen(m.amount)}
+                      </TableCell>
                     </TableRow>
                   );
                 })

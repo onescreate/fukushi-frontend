@@ -21,6 +21,8 @@ export interface Meal {
   amount: number;
   approvalStatus: MealApprovalStatus;
   requestType: MealRequestType | null;
+  /** 却下された理由（承認画面で入力されたもの）。承認・申請中は null。 */
+  rejectReason?: string | null;
 }
 
 export interface MealWithUser extends Meal {
@@ -124,14 +126,50 @@ export function useDecideMeal() {
     mutationFn: ({
       id,
       decision,
+      reason,
     }: {
       id: string;
       decision: 'approve' | 'reject';
-    }) => apiClient.patch(`/meal-reservations/${id}/${decision}`).then((r) => r.data),
+      /** 却下の理由（却下のときのみ・任意）。利用者にそのまま表示される。 */
+      reason?: string;
+    }) =>
+      apiClient
+        .patch(
+          `/meal-reservations/${id}/${decision}`,
+          decision === 'reject' ? { reason } : undefined,
+        )
+        .then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meal-pending'] });
       qc.invalidateQueries({ queryKey: ['meal-reservations'] });
       qc.invalidateQueries({ queryKey: ['roster'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+    },
+  });
+}
+
+export interface BulkDecideMealResult {
+  done: number;
+  failed: { id: string; message: string }[];
+}
+
+/** まとめて承認/却下（却下のときは理由を全件に付ける）。 */
+export function useBulkDecideMeals() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: {
+      ids: string[];
+      decision: 'approve' | 'reject';
+      reason?: string;
+    }) =>
+      apiClient
+        .patch<BulkDecideMealResult>('/meal-reservations/decide', v)
+        .then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['meal-pending'] });
+      qc.invalidateQueries({ queryKey: ['meal-reservations'] });
+      qc.invalidateQueries({ queryKey: ['roster'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
     },
   });
 }

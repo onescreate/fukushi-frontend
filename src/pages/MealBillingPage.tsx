@@ -154,7 +154,7 @@ export default function MealBillingPage() {
 
   const doClose = async () => {
     try {
-      await closeMonth.mutateAsync({ facilityId, year, month });
+      await closeMonth.mutateAsync({ facilityId: singleFacilityId ?? '', year, month });
       toast.success(`${year}年${month}月を締めました`);
       setConfirmClose(false);
     } catch (err) {
@@ -163,7 +163,7 @@ export default function MealBillingPage() {
   };
   const doReopen = async () => {
     try {
-      await reopenMonth.mutateAsync({ facilityId, year, month });
+      await reopenMonth.mutateAsync({ facilityId: singleFacilityId ?? '', year, month });
       toast.success(`${year}年${month}月の締めを解除しました`);
       setConfirmReopen(false);
     } catch (err) {
@@ -173,7 +173,8 @@ export default function MealBillingPage() {
 
   const openInvoice = (userId?: string) => {
     const q = new URLSearchParams({
-      facilityId,
+      // 請求書は店舗ごとに発行者情報を引くため、実際の店舗IDを渡す（'all' では出せない）
+      facilityId: singleFacilityId ?? '',
       year: String(year),
       month: String(month),
       ...(userId ? { userId } : {}),
