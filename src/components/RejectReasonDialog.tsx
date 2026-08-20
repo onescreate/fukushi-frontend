@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,7 @@ export function RejectReasonDialog({
   targetLabel = '予定',
   presets = SCHEDULE_REJECT_PRESETS,
   placeholder = '例：この日は定員に空きがありません',
+  note,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -52,6 +53,8 @@ export function RejectReasonDialog({
   /** よく使う理由のボタン */
   presets?: string[];
   placeholder?: string;
+  /** 却下すると何が起きるかの注意書き（画面にそのまま出す） */
+  note?: ReactNode;
 }) {
   const [reason, setReason] = useState('');
 
@@ -74,6 +77,11 @@ export function RejectReasonDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4">
+          {note && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13px] leading-relaxed text-amber-900">
+              {note}
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="reject-reason">理由</Label>
             <Input

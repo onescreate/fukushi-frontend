@@ -241,6 +241,12 @@ export default function MealApprovalsPage() {
         targetLabel="食事の申請"
         presets={MEAL_REJECT_PRESETS}
         placeholder="例：食事の申込み締切を過ぎています"
+        note={
+          <>
+            予約の申請を却下すると、その日の食事は<b>無効（0円）</b>になり、発注数にも請求にも含まれません。
+            取消の申請を却下した場合は、<b>予約のまま</b>になります（食事代はそのまま請求されます）。
+          </>
+        }
       />
     </div>
   );

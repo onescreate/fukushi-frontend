@@ -357,6 +357,12 @@ export default function ApprovalsPage() {
         count={rejecting?.length ?? 0}
         busy={busy}
         onSubmit={(reason) => rejecting && run(rejecting, 'reject', reason)}
+        note={
+          <>
+            却下すると<b>その日の予定ごと差し戻し</b>になります（実習の申請だけを外して通所として承認することはできません）。
+            利用者は内容を直して出し直します。時間や種別を変えたいだけなら、理由にその旨を書いてください。
+          </>
+        }
       />
     </div>
   );
