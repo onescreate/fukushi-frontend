@@ -55,8 +55,9 @@ export default function PersonalBillingPage() {
             {r.taxAmount > 0 && (
               <div className="flex justify-between text-slate-500">
                 <span>
+                  {/* taxRate はパーセント値（例 8＝8%）。100倍しない。 */}
                   内 消費税
-                  {r.taxRate != null ? `（${Math.round(r.taxRate * 100)}%）` : ''}
+                  {r.taxRate != null ? `（${r.taxRate}%）` : ''}
                 </span>
                 <span className="tabular-nums">{yen(r.taxAmount)}</span>
               </div>

@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { getApiErrorMessage } from '../../lib/errors';
-import { useFacilities } from '../facilities/api';
+import { useFacility } from '../../contexts/FacilityContext';
 import { useCreateDevice } from './api';
 
 export function DeviceRegisterDialog({
@@ -30,7 +30,9 @@ export function DeviceRegisterDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { data: facilities } = useFacilities();
+  // 店舗の選択肢は全画面共通のもの（福祉事業所として指定済み・有効な店舗のみ）を使う。
+  // 未指定の店舗に端末を登録できてしまうのを防ぐため、ヘッダーの店舗切替と同じ一覧に揃える。
+  const { facilities } = useFacility();
   const create = useCreateDevice();
 
   const [facilityId, setFacilityId] = useState('');
