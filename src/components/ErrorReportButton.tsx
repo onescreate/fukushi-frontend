@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type PointerEvent as RPointerEvent, type CSSProperties } from 'react';
 import axios from 'axios';
 import { domToJpeg } from 'modern-screenshot';
-import { Bug, X, Loader2, Send, Camera, Upload } from 'lucide-react';
+import { Bug, X, Loader2, Send, Camera, Upload, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../lib/firebase';
 
@@ -105,7 +105,8 @@ export default function ErrorReportButton() {
     if (!dragRef.current.dragging) return;
     const dy = e.clientY - dragRef.current.startY;
     if (Math.abs(dy) > 4) dragRef.current.moved = true;
-    const maxB = (typeof window !== 'undefined' ? window.innerHeight : 800) - 72;
+    // ★矢印を上下に付けたぶん、ひとかたまりの高さが増えました（ポータルと同じ 88）。
+    const maxB = (typeof window !== 'undefined' ? window.innerHeight : 800) - 88;
     const next = Math.max(16, Math.min(dragRef.current.startBottom - dy, Math.max(16, maxB)));
     setBtnBottom(next);
   };
@@ -122,19 +123,30 @@ export default function ErrorReportButton() {
       const top = Math.max(8, vh - btnBottom + 12);
       return { top, maxHeight: Math.max(200, vh - top - 12) };
     }
-    const bot = btnBottom + 56;
+    // ★BLOCK_H＝矢印を含めたひとかたまりの高さ（ポータルと同じ 76）。
+    const bot = btnBottom + 76;
     return { bottom: bot, maxHeight: Math.max(200, vh - bot - 12) };
   })();
 
   return (
     <div id="error-report-root">
-      <button onClick={handleClick} onPointerDown={onDragStart} onPointerMove={onDragMove} onPointerUp={onDragEnd} onPointerCancel={onDragEnd}
-        disabled={busy === 'capturing'} title="不具合報告（ドラッグで上下に移動できます）"
+      {/* ★上下に動かせることを示す矢印は、ボタンの「中」ではなく「上と下」に出します。
+          中に置くと文字やアイコンに紛れて、動かせる印だと気づけないためです。
+          ★onClick はこの枠に付けます。ドラッグのため枠が setPointerCapture でポインタを掴むので、
+            クリックは枠に対して起き、中の <button> の onClick は呼ばれないためです。
+          ★会計ポータル・KGI・介護・古物と同じ作りにそろえています。 */}
+      <div onClick={handleClick} onPointerDown={onDragStart} onPointerMove={onDragMove} onPointerUp={onDragEnd} onPointerCancel={onDragEnd}
         style={{ bottom: btnBottom }}
-        className="fixed right-8 z-[100000] pl-3.5 pr-4 py-2.5 rounded-full bg-rose-600 text-white shadow-lg flex items-center gap-1.5 hover:bg-rose-500 transition-colors disabled:opacity-70 cursor-grab active:cursor-grabbing touch-none select-none">
-        {busy === 'capturing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bug className="w-4 h-4" />}
-        <span className="text-sm font-bold whitespace-nowrap">不具合報告</span>
-      </button>
+        className="fixed right-8 z-[100000] flex flex-col items-center cursor-grab active:cursor-grabbing touch-none select-none">
+        <ChevronUp className="w-3.5 h-3.5 text-rose-600/70 -mb-0.5" strokeWidth={3} aria-hidden="true" />
+        <button type="button" disabled={busy === 'capturing'} title="不具合報告（ドラッグで上下に移動できます）"
+          className="pl-3.5 pr-4 py-2.5 rounded-full bg-rose-600 text-white shadow-lg flex items-center gap-1.5 hover:bg-rose-500 transition-colors disabled:opacity-70 cursor-grab active:cursor-grabbing">
+          {busy === 'capturing' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bug className="w-4 h-4" />}
+          {/* ★「質問はこちら」と同じ幅にそろえます（AiChatLauncher.tsx も 6em）。 */}
+          <span className="text-sm font-bold whitespace-nowrap min-w-[6em] text-center">不具合報告</span>
+        </button>
+        <ChevronDown className="w-3.5 h-3.5 text-rose-600/70 -mt-0.5" strokeWidth={3} aria-hidden="true" />
+      </div>
 
       {open && (
         <div style={popStyle} className="fixed right-8 z-[100000] w-[92vw] max-w-[380px] bg-white rounded-xl shadow-2xl border border-slate-200 flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-150">
